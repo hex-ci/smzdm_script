@@ -1,9 +1,11 @@
-name: "GitHub Actions SMZDM Bot"
+name: "SMZDM Check-in Bot"
 
 on:
   workflow_dispatch:
-  schedule:
-    - cron: "0 12 * * *"
+
+  # Uncomment below to schedule your job
+  # schedule:
+  #   - cron: "0 18 * * *"
 
 env:
   TZ: Asia/Shanghai
