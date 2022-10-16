@@ -1,0 +1,33 @@
+name: "GitHub Actions SMZDM Bot"
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 12 * * *"
+
+env:
+  TZ: Asia/Shanghai
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          submodules: true
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.9
+
+      - name: Install requirements
+        run: |
+          pip install -r requirements.txt
+
+      - name: Working
+        env:
+          SMZDM_COOKIE: ${{ secrets.SMZDM_COOKIE }}
+          PUSH_PLUS_TOKEN: ${{ secrets.PUSH_PLUS_TOKEN }}
+        run: python main.py
