@@ -15,9 +15,21 @@
 ## 2. 使用方法
 
 1. Fork[此仓库项目](https://github.com/Chasing66/smzdm_bot)>点击右上角 Fork 按钮即可, 欢迎点`star`~
-2. Secret 新增`COOKIE`, 填入[什么值得买官网](https://www.smzdm.com/)获取的 Cookie 信息, [详见](#31-cookie获取方法)
-3. (可选) Secret 新增`PUSH_PLUS_TOKEN`用于推送通知, [详见](https://www.pushplus.plus/)
-4. 本地运行可以设置环境变量
+2. 修改 `.github/workflows/run.yml`里的下面部分, 取消注释，修改为你自己的时间
+
+```bash
+name: "SMZDM Check-in Bot"
+
+on:
+  workflow_dispatch:
+
+  schedule:
+    - cron: "0 18 * * *"
+```
+
+3. Secret 新增`SMZDM_COOKIE`, 填入[什么值得买官网](https://www.smzdm.com/)获取的 Cookie 信息, [详见](#31-cookie获取方法)
+4. (可选) Secret 新增`PUSH_PLUS_TOKEN`用于推送通知, [详见](https://www.pushplus.plus/)
+5. 也可以在本地运行，通过设置环境变量
 
 ```bash
 export SMZDM_COOKIE=xxxx
