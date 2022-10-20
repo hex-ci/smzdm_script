@@ -38,13 +38,13 @@ on:
 
 ### 2.2 本地运行
 
-1. 配置`config.toml`运行, 生成`config/config_example.toml`并按照需求配置
+配置`config.toml`运行, 生成`config/config_example.toml`并按照需求配置
 
 ```
 cp config/config_example.toml config/config.toml
 ```
 
-### 2.2 使用 Cookie Editor
+### 2.3 使用 Cookie Editor
 
 也可以使用浏览器扩展 [Cookie Editor](https://microsoftedge.microsoft.com/addons/detail/cookie-editor/oaaopmblghnnjfgbgmflnkjkilhihdpb)导出 cookies, 另存为`cookies.json`在项目的根目录
 
