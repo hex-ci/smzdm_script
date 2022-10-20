@@ -1,0 +1,8 @@
+# Cookie
+SMZDM_COOKIE = ''
+
+# Notification
+PUSH_PLUS_TOKEN = ''
+SC_KEY = ''
+TG_BOT_TOKEN = ''
+TG_USER_ID = ''
