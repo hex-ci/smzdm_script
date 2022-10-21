@@ -1,10 +1,5 @@
 name: Docker image release
 on:
-  push:
-    branches:
-      - "main"
-    paths-ignore:
-      - "**.md"
   workflow_dispatch:
 
 jobs:
@@ -35,13 +30,6 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      - name: Login to GitHub Container Registry
-        uses: docker/login-action@v1
-        with:
-          registry: ghcr.io
-          username: ${{ github.repository_owner }}
-          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Lower case
         id: string

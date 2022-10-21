@@ -1,7 +1,11 @@
-name: "SMZDM Check-in Bot by Docker"
+name: SMZDM Check-in Docker Bot
 
 on:
   workflow_dispatch:
+  workflow_run:
+    workflows: ["Docker image release"]
+    types:
+      - completed
 
   # Uncomment below to schedule your job
   # schedule:
@@ -18,4 +22,7 @@ jobs:
         SC_KEY: ${{ secrets.SC_KEY }}
         TG_BOT_TOKEN: ${{ secrets.TG_BOT_TOKEN }}
         TG_USER_ID: ${{ secrets.TG_USER_ID }}
-
+    steps:
+      - name: Working
+        run: |
+          python /smzdm_bot/main.py
