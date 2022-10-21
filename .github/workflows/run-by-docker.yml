@@ -1,0 +1,21 @@
+name: "SMZDM Check-in Bot by Docker"
+
+on:
+  workflow_dispatch:
+
+  # Uncomment below to schedule your job
+  # schedule:
+  #   - cron: "0 18 * * *"
+
+jobs:
+  container-test-job:
+    runs-on: ubuntu-latest
+    container:
+      image: enwaiax/smzdm_bot
+      env:
+        SMZDM_COOKIE: ${{ secrets.SMZDM_COOKIE }}
+        PUSH_PLUS_TOKEN: ${{ secrets.PUSH_PLUS_TOKEN }}
+        SC_KEY: ${{ secrets.SC_KEY }}
+        TG_BOT_TOKEN: ${{ secrets.TG_BOT_TOKEN }}
+        TG_USER_ID: ${{ secrets.TG_USER_ID }}
+

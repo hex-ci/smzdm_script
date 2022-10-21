@@ -1,0 +1,10 @@
+__pycache__/
+.github/
+.venv/
+.vscode/
+config/config.toml
+config/cookies.json
+.env
+.dockerignore
+.gitignore
+Dockerfile

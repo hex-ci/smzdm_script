@@ -77,6 +77,9 @@ def main():
     if Path.exists(Path(CONFIG_PATH, "config.toml")):
         pprint("Get configration from config.toml")
         conf_kwargs = TomlHelper(Path(CONFIG_PATH, "config.toml")).read()
+        SMZDM_COOKIE = conf_kwargs.get(
+            "SMZDM_COOKIE").encode('UTF-8').decode('latin-1')
+        smzdm_bot.set_cookies(SMZDM_COOKIE)
     elif os.environ.get("SMZDM_COOKIE", None):
         pprint("Get configration from env")
         conf_kwargs = {
@@ -86,6 +89,9 @@ def main():
             "TG_BOT_TOKEN": os.environ.get("TG_BOT_TOKEN", None),
             "TG_USER_ID": os.environ.get("TG_USER_ID", None),
         }
+        SMZDM_COOKIE = conf_kwargs.get(
+            "SMZDM_COOKIE").encode('UTF-8').decode('latin-1')
+        smzdm_bot.set_cookies(SMZDM_COOKIE)
     elif Path.exists(Path(CONFIG_PATH, "cookies.json")):
         pprint("Load cookis from cookies.json")
         with open(Path(CONFIG_PATH, "cookies.json", "r")) as f:
@@ -94,10 +100,9 @@ def main():
         for cookie in cookies:
             smzdm_cookies.update({cookie["name"]: cookie["value"]})
         smzdm_bot.update_cookies(smzdm_cookies)
-    if conf_kwargs.get("SMZDM_COOKIE", None):
-        SMZDM_COOKIE = conf_kwargs.get(
-            "SMZDM_COOKIE").encode('UTF-8').decode('latin-1')
-        smzdm_bot.set_cookies(SMZDM_COOKIE)
+    else:
+        pprint("Fail to get SMZDM_COOKIE, exit")
+        sys.exit(1)
     msg = smzdm_bot.checkin()
     NotifyBot(content=msg, **conf_kwargs)
 
