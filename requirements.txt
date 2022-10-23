@@ -1,10 +1,4 @@
-certifi==2022.9.24
-charset-normalizer==3.0.0
-docopt==0.6.2
-idna==3.4
+APScheduler==3.9.1
 prettytable==3.4.1
 requests==2.28.1
 toml==0.10.2
-urllib3==1.26.12
-wcwidth==0.2.5
-yarg==0.1.9

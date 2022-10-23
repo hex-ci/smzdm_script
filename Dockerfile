@@ -15,4 +15,4 @@ COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=builder /usr/share/zoneinfo /usr/share/zoneinfo
 COPY . /smzdm_bot
 
-CMD ["python", "main.py"]
+CMD python scheduler.py

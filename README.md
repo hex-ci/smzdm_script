@@ -10,6 +10,8 @@
 ## 1. 实现功能
 
 - `什么值得买`每日签到
+- Github Action(两种配置方式，直接运行或者调用 Docker 运行)
+- 本地 Docker 定时运行
 - 通过`pushplus`推送运行结果到微信
 - 通过`server酱`推送运行结果到微信
 - 通过`telegram bot`推送
@@ -31,7 +33,7 @@ on:
     - cron: "0 18 * * *"
 ```
 
-3. Secret 新增`SMZDM_COOKIE`, 填入[什么值得买官网](https://www.smzdm.com/)获取的 Cookie 信息, [详见](#31-cookie获取方法)
+3. Secret 新增`SMZDM_COOKIE`, 填入[什么值得买官网](https://www.smzdm.com/)获取的 Cookie 信息, [详见](#31-Cookie获取方法)
 4. (可选) Secret 新增`PUSH_PLUS_TOKEN`用于推送通知, [详见](https://www.pushplus.plus/)
 5. (可选) Secret 新增`SC_KEY`用于推送通知, [详见](https://sct.ftqq.com/)
 6. (可选) Secret 新增`TG_BOT_TOKEN` 和`TG_USER_ID`用于推送通知
@@ -44,7 +46,24 @@ on:
 cp config/config_example.toml config/config.toml
 ```
 
-### 2.3 使用 Cookie Editor
+### 2.3 本地 docker 运行
+
+见`docker-compose.yml`
+
+本地生成一个`.env` 文件, 用于配置 docker-compose.yml 运行所需要的环境变量， 如下:
+
+```
+SMZDM_COOKIE=__ckguid=
+PUSH_PLUS_TOKEN=
+SC_KEY=
+TG_BOT_TOKEN=
+TG_USER_ID=
+# 定时设定(可选)， 若没有设定则随机定时执行
+SCH_HOUR=
+SCH_MINUTE=
+```
+
+### 2.4 使用 Cookie Editor
 
 也可以使用浏览器扩展 [Cookie Editor](https://microsoftedge.microsoft.com/addons/detail/cookie-editor/oaaopmblghnnjfgbgmflnkjkilhihdpb)导出 cookies, 另存为`cookies.json`在项目的根目录
 

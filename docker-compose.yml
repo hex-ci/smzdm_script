@@ -1,0 +1,14 @@
+version: "3.9"
+services:
+  smzdm_bot:
+    image: enwaiax/smzdm_bot
+    container_name: smzdm_bot
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "1m"
+        max-file: "1"
+    env_file:
+      - ${ENVIROMENT}.env
+    entrypoint: "sleep infinity"
