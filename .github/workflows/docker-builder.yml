@@ -33,7 +33,7 @@ jobs:
 
       - name: Lower case
         id: string
-        uses: ASzc/change-string-case-action@v3
+        uses: ASzc/change-string-case-action@v4
         with:
           string: ${{ secrets.DOCKERHUB_USERNAME }}/${{ github.event.repository.name }}
 
