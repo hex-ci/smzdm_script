@@ -88,6 +88,7 @@ def main():
             "SC_KEY": os.environ.get("SC_KEY", None),
             "TG_BOT_TOKEN": os.environ.get("TG_BOT_TOKEN", None),
             "TG_USER_ID": os.environ.get("TG_USER_ID", None),
+            "TG_BOT_API": os.environ.get("TG_BOT_API", None),
         }
         SMZDM_COOKIE = conf_kwargs.get(
             "SMZDM_COOKIE").encode('UTF-8').decode('latin-1')

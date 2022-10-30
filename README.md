@@ -12,9 +12,10 @@
 - `什么值得买`每日签到
 - Github Action(两种配置方式，直接运行或者调用 Docker 运行)
 - 本地 Docker 定时运行
-- 通过`pushplus`推送运行结果到微信
+- 通过`pushplus`推送运行结果到微信(不推荐)
 - 通过`server酱`推送运行结果到微信
 - 通过`telegram bot`推送
+- 自定义反代`Telegram Bot API`, [搭建教程](https://anerg.com/2022/07/25/reverse-proxy-telegram-bot-api-using-cloudflare-worker.html)
 
 ## 2. 使用方法
 
@@ -37,6 +38,7 @@ on:
 4. (可选) Secret 新增`PUSH_PLUS_TOKEN`用于推送通知, [详见](https://www.pushplus.plus/)
 5. (可选) Secret 新增`SC_KEY`用于推送通知, [详见](https://sct.ftqq.com/)
 6. (可选) Secret 新增`TG_BOT_TOKEN` 和`TG_USER_ID`用于推送通知
+7. (可选) Secret 新增`TG_BOT_API`用于自定义反代的`Telegram Bot API`
 
 ### 2.2 本地运行
 
