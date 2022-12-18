@@ -76,3 +76,7 @@ SCH_MINUTE=
 - 使用 Chrome 浏览器访问[什么值得买官网](https://www.smzdm.com/), 登录账号
 - 打开开发者工具 (Windows 快捷键`F12`, MacOS 快捷键`option + command + i`)
 - 选择 Network, 刷新页面, 选择第一个`www.smzdm.com`, 找到`Requests Headers`里的`Cookie`
+
+### 3.2 连续签到后突然失败
+
+Cookies 的有效期暂为止，测试反馈的结果是签到 90 天左右后开始签到失败，此时需要从电脑浏览器端从新签到一次，并更新 cookies
