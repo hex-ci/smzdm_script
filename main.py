@@ -13,6 +13,8 @@ from utils.file_helper import TomlHelper
 CURRENT_PATH = Path(__file__).parent.resolve()
 CONFIG_PATH = Path(CURRENT_PATH, "config")
 
+MANUAL_ERR_MSG = "签到失败,请从浏览器手动签到一次,并更新cookies"
+
 
 class SMZDM_Bot(object):
 
@@ -68,7 +70,7 @@ class SMZDM_Bot(object):
             return msg
         else:
             logger.error("Faile to sign in")
-            msg = "签到失败,请从浏览器手动签到一次,并更新cookies"
+            msg = MANUAL_ERR_MSG
 
 
 def main():
@@ -105,6 +107,9 @@ def main():
         sys.exit(1)
     msg = smzdm_bot.checkin()
     NotifyBot(content=msg, **conf_kwargs)
+    if msg == MANUAL_ERR_MSG:
+        logger.error("Fail the Github action job")
+        sys.exit(1)
 
 
 if __name__ == "__main__":
