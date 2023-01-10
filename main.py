@@ -59,7 +59,8 @@ class SMZDM_Bot(object):
             cards = resp_data["cards"]
             tb = pt.PrettyTable()
             tb.field_names = ["签到天数", "连续签到", "金币", "积分", "经验", "等级", "补签卡"]
-            tb.add_row([checkin_num, days_of_week, gold, point, exp, rank, cards])
+            tb.add_row([checkin_num, days_of_week,
+                       gold, point, exp, rank, cards])
             logger.info(f"\n{tb}")
             msg = f"""⭐签到成功{checkin_num}天
             🏅金币{gold}
@@ -71,6 +72,7 @@ class SMZDM_Bot(object):
         else:
             logger.error("Faile to sign in")
             msg = MANUAL_ERR_MSG
+            return msg
 
 
 def main():
@@ -80,7 +82,8 @@ def main():
     if Path.exists(Path(CONFIG_PATH, "config.toml")):
         logger.info("Get configration from config.toml")
         conf_kwargs = TomlHelper(Path(CONFIG_PATH, "config.toml")).read()
-        SMZDM_COOKIE = conf_kwargs.get("SMZDM_COOKIE").encode("UTF-8").decode("latin-1")
+        SMZDM_COOKIE = conf_kwargs.get(
+            "SMZDM_COOKIE").encode("UTF-8").decode("latin-1")
         smzdm_bot.set_cookies(SMZDM_COOKIE)
     elif os.environ.get("SMZDM_COOKIE", None):
         logger.info("Get configration from env")
@@ -92,7 +95,8 @@ def main():
             "TG_USER_ID": os.environ.get("TG_USER_ID", None),
             "TG_BOT_API": os.environ.get("TG_BOT_API", None),
         }
-        SMZDM_COOKIE = conf_kwargs.get("SMZDM_COOKIE").encode("UTF-8").decode("latin-1")
+        SMZDM_COOKIE = conf_kwargs.get(
+            "SMZDM_COOKIE").encode("UTF-8").decode("latin-1")
         smzdm_bot.set_cookies(SMZDM_COOKIE)
     elif Path.exists(Path(CONFIG_PATH, "cookies.json")):
         logger.info("Load cookis from cookies.json")
