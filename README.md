@@ -10,7 +10,7 @@
 ## 1. 实现功能
 
 - `什么值得买`每日签到
-- Github Action(两种配置方式，直接运行或者调用 Docker 运行)
+- Github Action(两种配置方式，直接运行或者调用 Docker 运行), **务必自行更改为随机时间**
 - 本地 Docker 定时运行
 - 通过`pushplus`推送运行结果到微信(不推荐)
 - 通过`server酱`推送运行结果到微信
@@ -21,17 +21,20 @@
 
 ### 2.1 Git action 运行
 
+**务必自行更改为随机时间**
+
 1. Fork[此仓库项目](https://github.com/Chasing66/smzdm_bot)>点击右上角 Fork 按钮即可, 欢迎点`star`~
 2. 修改 `.github/workflows/run.yml`里的下面部分, 取消注释，修改为你自己的时间
 
-```bash
+```yaml
 name: "SMZDM Check-in Bot"
 
 on:
   workflow_dispatch:
 
+  # UTC时间，对应Beijing时间 9：30
   schedule:
-    - cron: "0 18 * * *"
+    - cron: "30 1 * * *"
 ```
 
 3. Secret 新增`SMZDM_COOKIE`, 填入[什么值得买官网](https://www.smzdm.com/)获取的 Cookie 信息, [详见](#31-Cookie获取方法)
@@ -55,7 +58,7 @@ cp config/config_example.toml config/config.toml
 本地生成一个`.env` 文件, 用于配置 docker-compose.yml 运行所需要的环境变量， 如下:
 
 ```
-SMZDM_COOKIE=__ckguid=
+SMZDM_COOKIE=
 PUSH_PLUS_TOKEN=
 SC_KEY=
 TG_BOT_TOKEN=
@@ -77,6 +80,7 @@ SCH_MINUTE=
 - 打开开发者工具 (Windows 快捷键`F12`, MacOS 快捷键`option + command + i`)
 - 选择 Network, 刷新页面, 选择第一个`www.smzdm.com`, 找到`Requests Headers`里的`Cookie`
 
-### 3.2 连续签到后突然失败
+## 更新日志
 
-Cookies 的有效期暂时未知，测试反馈的结果是签到 90 天左右后开始签到失败，此时需要从电脑浏览器端从新签到一次，并更新 cookies
+- 2022-12-08, 签到失败，浏览器端签到需要滑动验证码认证
+- 2023-01-11, 更改`User-Agent`为`iPhone`后可`bypass`滑块认证
