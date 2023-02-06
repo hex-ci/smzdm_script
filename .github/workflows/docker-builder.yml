@@ -38,7 +38,7 @@ jobs:
           string: ${{ secrets.DOCKERHUB_USERNAME }}/${{ github.event.repository.name }}
 
       - name: Build and push
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v4
         with:
           context: .
           platforms: linux/amd64,linux/arm64,linux/arm/v7,linux/386
