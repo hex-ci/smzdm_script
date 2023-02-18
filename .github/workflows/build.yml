@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  buildx-dockerhub:
+  buildx:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
