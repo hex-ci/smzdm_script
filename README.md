@@ -24,7 +24,7 @@
 **务必自行更改为随机时间**
 
 1. Fork[此仓库项目](https://github.com/Chasing66/smzdm_bot)>, 欢迎`star`~
-2. 修改 `.github/workflows/docker-run.yml`里的下面部分, 取消`schedule`两行的注释，自行设定时间
+2. 修改 `.github/workflows/checkin.yml`里的下面部分, 取消`schedule`两行的注释，自行设定时间
 
 ```yaml
 # UTC时间，对应Beijing时间 9：30
@@ -40,7 +40,15 @@ schedule:
 
 ### 2.2 本地运行
 
-复制`config/config_example.toml`为`config/config.toml`，并按照需求配置
+复制`app/config/config_example.toml`为`app/config/config.toml`，并按照需求配置
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+cd app
+pip install -r requirements.txt
+python main.py
+```
 
 ### 2.3 本地 docker 运行
 

@@ -1,9 +1,9 @@
-name: SMZDM Check-in Docker Bot
+name: Check in
 
 on:
   workflow_dispatch:
   workflow_run:
-    workflows: ["Docker image release"]
+    workflows: ["Build image"]
     types:
       - completed
 

@@ -1,4 +1,4 @@
-name: Docker image release
+name: Build image
 on:
   workflow_dispatch:
 
@@ -40,7 +40,7 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v4
         with:
-          context: .
+          context: app
           platforms: linux/amd64,linux/arm64,linux/arm/v7,linux/386
           push: true
           tags: ${{ steps.string.outputs.lowercase }}:latest

@@ -92,7 +92,7 @@ def main():
     if Path.exists(Path(CONFIG_PATH, "config.toml")):
         logger.info("Get configration from config.toml")
         conf_kwargs = TomlHelper(Path(CONFIG_PATH, "config.toml")).read()
-    elif os.environ.get("ANDROID_COOKIES", None):
+    elif os.environ.get("ANDROID_COOKIE", None):
         logger.info("Get configration from env")
         conf_kwargs = {
             "USER_AGENT": os.environ.get("USER_AGENT"),
