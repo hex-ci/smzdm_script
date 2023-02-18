@@ -7,9 +7,9 @@ on:
     types:
       - completed
 
-  # Uncomment below to schedule your job
+  # UTC时间，对应Beijing时间 9：30
   # schedule:
-  #   - cron: "00 01 * * *"
+  #   - cron: "30 1 * * *"
 
 jobs:
   container-test-job:
@@ -17,7 +17,10 @@ jobs:
     container:
       image: enwaiax/smzdm_bot
       env:
-        SMZDM_COOKIE: ${{ secrets.SMZDM_COOKIE }}
+        ANDROID_COOKIE: ${{ secrets.ANDROID_COOKIE }}
+        TOKEN: ${{ secrets.TOKEN }}
+        SK: ${{ secrets.SK }}
+        USER_AGENT: ${{ secrets.USER_AGENT }}
         PUSH_PLUS_TOKEN: ${{ secrets.PUSH_PLUS_TOKEN }}
         SC_KEY: ${{ secrets.SC_KEY }}
         TG_BOT_TOKEN: ${{ secrets.TG_BOT_TOKEN }}

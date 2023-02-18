@@ -1,6 +1,8 @@
-import json
+import hashlib
 import os
+import random
 import sys
+import time
 from pathlib import Path
 
 import prettytable as pt
@@ -13,55 +15,63 @@ from utils.file_helper import TomlHelper
 CURRENT_PATH = Path(__file__).parent.resolve()
 CONFIG_PATH = Path(CURRENT_PATH, "config")
 
-MANUAL_ERR_MSG = "签到失败,请从浏览器手动签到一次,并更新cookies"
-USER_AGENT = (
-    "Mozilla/5.0 (iPhone; CPU iPhone OS 13_2_3 like Mac OS X) "
-    "AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 "
-    "Mobile/15E148 Safari/604.1 Edg/108.0.0.0"
-)
 
+class SmzdmBot(object):
+    KEY = "apr1$AwP!wRRT$gJ/q.X24poeBInlUJC"
 
-class SMZDM_Bot(object):
-
-    DEFAULT_HEADERS = {
-        "Accept": "*/*",
-        "Accept-Encoding": "gzip, deflate, br",
-        "Accept-Language": "zh-CN,zh;q=0.9",
-        "Connection": "keep-alive",
-        "Host": "zhiyou.smzdm.com",
-        "Referer": "https://www.smzdm.com/",
-        "Sec-Fetch-Dest": "script",
-        "Sec-Fetch-Mode": "no-cors",
-        "Sec-Fetch-Site": "same-site",
-        "User-Agent": USER_AGENT,
-    }
-
-    def __init__(self):
+    def __init__(self, conf_kwargs: dict):
+        self.conf_kwargs = conf_kwargs
         self.session = requests.Session()
-        self.session.headers = self.DEFAULT_HEADERS
+        self.start_timestamp = int(time.time())
+        self._set_header()
 
-    def update_cookies(self, cookies):
-        self.session.cookies.update(cookies)
+    def _set_header(self):
+        request_key = f"{random.randint(10000000, 100000000) * 10000000000 + self.start_timestamp}"
+        headers = {
+            "user-agent": self.conf_kwargs.get("USER_AGENT"),
+            "request_key": request_key,
+            "cookie": self.conf_kwargs.get("ANDROID_COOKIE"),
+            "content-type": "application/x-www-form-urlencoded",
+        }
+        self.session.headers = headers
 
-    def set_cookies(self, cookies):
-        self.session.headers["Cookie"] = cookies
+    def _data(self):
+        time = self.start_timestamp * 1000
+        sk = self.conf_kwargs.get("SK")
+        token = self.conf_kwargs.get("TOKEN")
+        sign_str = f"f=android&sk={sk}&time={time}&token={token}&v=10.4.20&weixin=1&key={self.KEY}"
+        sign = self._str_to_md5(sign_str).upper()
+        data = {
+            "weixin": "1",
+            "captcha": "",
+            "f": "android",
+            "v": "10.4.20",
+            "sk": sk,
+            "sign": sign,
+            "touchstone_event": "",
+            "time": time,
+            "token": token,
+        }
+        return data
+
+    def _str_to_md5(self, m: str):
+        return hashlib.md5(m.encode()).hexdigest()
 
     def checkin(self):
-        url = "https://zhiyou.smzdm.com/user/checkin/jsonp_checkin"
-        resp = self.session.get(url)
-        if resp.status_code == 200 and resp.json()["error_code"] == 0:
+        url = "https://user-api.smzdm.com/checkin"
+        data = self._data()
+        resp = self.session.post(url, data)
+        if resp.status_code == 200 and int(resp.json()["error_code"]) == 0:
             resp_data = resp.json()["data"]
-            checkin_num = resp_data["checkin_num"]
-            days_of_week = resp_data["continue_checkin_days"]
-            gold = resp_data["gold"]
-            point = resp_data["point"]
-            exp = resp_data["exp"]
+            checkin_num = resp_data["daily_num"]
+            gold = resp_data["cgold"]
+            point = resp_data["cpoints"]
+            exp = resp_data["cexperience"]
             rank = resp_data["rank"]
             cards = resp_data["cards"]
             tb = pt.PrettyTable()
-            tb.field_names = ["签到天数", "连续签到", "金币", "积分", "经验", "等级", "补签卡"]
-            tb.add_row([checkin_num, days_of_week,
-                       gold, point, exp, rank, cards])
+            tb.field_names = ["签到天数", "金币", "积分", "经验", "等级", "补签卡"]
+            tb.add_row([checkin_num, gold, point, exp, rank, cards])
             logger.info(f"\n{tb}")
             msg = f"""⭐签到成功{checkin_num}天
             🏅金币{gold}
@@ -72,47 +82,35 @@ class SMZDM_Bot(object):
             return msg
         else:
             logger.error("Faile to sign in")
-            msg = MANUAL_ERR_MSG
+            msg = "Fail to login in"
             return msg
 
 
 def main():
-    smzdm_bot = SMZDM_Bot()
     conf_kwargs = {}
 
     if Path.exists(Path(CONFIG_PATH, "config.toml")):
         logger.info("Get configration from config.toml")
         conf_kwargs = TomlHelper(Path(CONFIG_PATH, "config.toml")).read()
-        SMZDM_COOKIE = conf_kwargs.get(
-            "SMZDM_COOKIE").encode("UTF-8").decode("latin-1")
-        smzdm_bot.set_cookies(SMZDM_COOKIE)
-    elif os.environ.get("SMZDM_COOKIE", None):
+    elif os.environ.get("ANDROID_COOKIES", None):
         logger.info("Get configration from env")
         conf_kwargs = {
-            "SMZDM_COOKIE": os.environ.get("SMZDM_COOKIE"),
+            "USER_AGENT": os.environ.get("USER_AGENT"),
+            "SK": os.environ.get("SK"),
+            "ANDROID_COOKIE": os.environ.get("ANDROID_COOKIE"),
+            "TOKEN": os.environ.get("TOKEN"),
             "PUSH_PLUS_TOKEN": os.environ.get("PUSH_PLUS_TOKEN", None),
             "SC_KEY": os.environ.get("SC_KEY", None),
             "TG_BOT_TOKEN": os.environ.get("TG_BOT_TOKEN", None),
             "TG_USER_ID": os.environ.get("TG_USER_ID", None),
             "TG_BOT_API": os.environ.get("TG_BOT_API", None),
         }
-        SMZDM_COOKIE = conf_kwargs.get(
-            "SMZDM_COOKIE").encode("UTF-8").decode("latin-1")
-        smzdm_bot.set_cookies(SMZDM_COOKIE)
-    elif Path.exists(Path(CONFIG_PATH, "cookies.json")):
-        logger.info("Load cookis from cookies.json")
-        with open(Path(CONFIG_PATH, "cookies.json", "r")) as f:
-            cookies = json.load(f)
-        smzdm_cookies = {}
-        for cookie in cookies:
-            smzdm_cookies.update({cookie["name"]: cookie["value"]})
-        smzdm_bot.update_cookies(smzdm_cookies)
     else:
-        logger.info("Fail to get SMZDM_COOKIE, exit")
+        logger.info("Please set cookies first")
         sys.exit(1)
-    msg = smzdm_bot.checkin()
+    msg = SmzdmBot(conf_kwargs).checkin()
     NotifyBot(content=msg, **conf_kwargs)
-    if msg == MANUAL_ERR_MSG:
+    if msg == "Fail to login in":
         logger.error("Fail the Github action job")
         sys.exit(1)
 

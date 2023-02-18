@@ -1,8 +1,11 @@
 # Cookie
-SMZDM_COOKIE = ''
+USER_AGENT = ""
+ANDROID_COOKIE = ""
+SK = ""
+TOKEN = ""
 
 # Notification
-PUSH_PLUS_TOKEN = ''
-SC_KEY = ''
-TG_BOT_TOKEN = ''
-TG_USER_ID = ''
+PUSH_PLUS_TOKEN = ""
+SC_KEY = ""
+TG_BOT_TOKEN = ""
+TG_USER_ID = ""

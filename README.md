@@ -10,7 +10,7 @@
 ## 1. 实现功能
 
 - `什么值得买`每日签到
-- Github Action(两种配置方式，直接运行或者调用 Docker 运行), **务必自行更改为随机时间**
+- Github Action 定时执行, **务必自行更改为随机时间**
 - 本地 Docker 定时运行
 - 通过`pushplus`推送运行结果到微信(不推荐)
 - 通过`server酱`推送运行结果到微信
@@ -19,25 +19,20 @@
 
 ## 2. 使用方法
 
-### 2.1 Git action 运行
+### 2.1 Git Action 运行
 
 **务必自行更改为随机时间**
 
-1. Fork[此仓库项目](https://github.com/Chasing66/smzdm_bot)>点击右上角 Fork 按钮即可, 欢迎点`star`~
-2. 修改 `.github/workflows/run.yml`里的下面部分, 取消注释，修改为你自己的时间
+1. Fork[此仓库项目](https://github.com/Chasing66/smzdm_bot)>, 欢迎`star`~
+2. 修改 `.github/workflows/docker-run.yml`里的下面部分, 取消`schedule`两行的注释，自行设定时间
 
 ```yaml
-name: "SMZDM Check-in Bot"
-
-on:
-  workflow_dispatch:
-
-  # UTC时间，对应Beijing时间 9：30
-  schedule:
-    - cron: "30 1 * * *"
+# UTC时间，对应Beijing时间 9：30
+schedule:
+  - cron: "30 1 * * *"
 ```
 
-3. Secret 新增`SMZDM_COOKIE`, 填入[什么值得买官网](https://www.smzdm.com/)获取的 Cookie 信息, [详见](#31-Cookie获取方法)
+3. Secret 新增`ANDROID_COOKIE`,`SK` ,`USER_AGENT`，`TOKEN` [方法详见](#31-手机抓包)
 4. (可选) Secret 新增`PUSH_PLUS_TOKEN`用于推送通知, [详见](https://www.pushplus.plus/)
 5. (可选) Secret 新增`SC_KEY`用于推送通知, [详见](https://sct.ftqq.com/)
 6. (可选) Secret 新增`TG_BOT_TOKEN` 和`TG_USER_ID`用于推送通知
@@ -45,11 +40,7 @@ on:
 
 ### 2.2 本地运行
 
-配置`config.toml`运行, 生成`config/config_example.toml`并按照需求配置
-
-```
-cp config/config_example.toml config/config.toml
-```
+复制`config/config_example.toml`为`config/config.toml`，并按照需求配置
 
 ### 2.3 本地 docker 运行
 
@@ -58,30 +49,36 @@ cp config/config_example.toml config/config.toml
 本地生成一个`.env` 文件, 用于配置 docker-compose.yml 运行所需要的环境变量， 如下:
 
 ```
-SMZDM_COOKIE=
-PUSH_PLUS_TOKEN=
-SC_KEY=
-TG_BOT_TOKEN=
-TG_USER_ID=
-# 定时设定(可选)， 若没有设定则随机定时执行
+# Cookie
+USER_AGENT = ""
+ANDROID_COOKIE = ""
+SK = ""
+TOKEN = ""
+
+# Notification
+PUSH_PLUS_TOKEN = ""
+SC_KEY = ""
+TG_BOT_TOKEN = ""
+TG_USER_ID = ""
+
+# 定时设定(可选)， 若未设定则随机定时执行
 SCH_HOUR=
 SCH_MINUTE=
 ```
 
-### 2.4 使用 Cookie Editor
-
-也可以使用浏览器扩展 [Cookie Editor](https://microsoftedge.microsoft.com/addons/detail/cookie-editor/oaaopmblghnnjfgbgmflnkjkilhihdpb)导出 cookies, 另存为`cookies.json`在项目的根目录
-
 ## 3. 其它
 
-### 3.1 Cookie 获取方法
+### 3.1 手机抓包
 
-- 使用 Chrome 浏览器访问[什么值得买官网](https://www.smzdm.com/), 登录账号
-- 打开开发者工具 (Windows 快捷键`F12`, MacOS 快捷键`option + command + i`)
-- 选择 Network, 刷新页面, 选择第一个`www.smzdm.com`, 找到`Requests Headers`里的`Cookie`
+抓包工具可使用 HttpCanary，教程参考[HttpCanary 抓包](https://juejin.cn/post/7177682063699968061)
+
+1. 按照上述教程配置好 HttpCanary
+2. 开始抓包，并打开什么值得买 APP
+3. 过滤域名为`user-api.smzdm.com`的 post 请求
 
 ## 更新日志
 
 - 2022-12-08, 签到失败，浏览器端签到需要滑动验证码认证
 - 2023-01-11, 更改`User-Agent`为`iPhone`后可`bypass`滑块认证
 - 2023-01-14, 登录认证失败, 签到失效
+- 2023-02-18, 通过安卓端验证登录，感谢[jzksnsjswkw/smzdm-app](https://github.com/jzksnsjswkw/smzdm-app)的思路。旧版代码查看[old](https://github.com/Chasing66/smzdm_bot/tree/old)分支
