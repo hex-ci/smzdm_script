@@ -71,15 +71,15 @@ class NotifyBot(object):
                 )
                 return
 
-            TG_BOT_API = self.kwargs.get("TG_BOT_API", "https://api.telegram.org")
+            TG_BOT_API = self.kwargs.get("TG_BOT_API", "https://api.telegram.org/")
             url = urljoin(TG_BOT_API, f"/bot{TG_BOT_TOKEN}/sendMessage")
             headers = {"Content-Type": "application/x-www-form-urlencoded"}
-            payload = {
+            params = {
                 "chat_id": str(TG_USER_ID),
-                "text": f"{self.title}\n\n{self.content}",
+                "text": f"{self.title}\n{self.content}",
                 "disable_web_page_preview": "true",
             }
-            resp = requests.post(url=url, headers=headers, params=payload)
+            resp = requests.post(url=url, headers=headers, params=params)
             if resp.status_code == 200:
                 logger.info("✅ Telegram Bot notified")
             return resp.json()
