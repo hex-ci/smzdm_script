@@ -2,7 +2,7 @@
 
 ## 使用方法
 
-### 青龙导入命令
+### 青龙拉库
 
 ```bash
 ql repo https://github.com/hex-ci/smzdm_script.git "smzdm_checkin.py" "" "" "" "py"
