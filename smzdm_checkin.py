@@ -66,7 +66,7 @@ class SmzdmBot(object):
             time.sleep(5)
 
         sep = "\n********开始账号" + str(self.index) + "********"
-        print(sep + "\n", end="")
+        print(sep + "\n")
 
         self.start_timestamp = int(time.time())
         self._set_header()
@@ -84,14 +84,14 @@ class SmzdmBot(object):
             cards = resp_data["cards"]
 
             msg = f"""⭐签到成功{checkin_num}天
-🏅金币{gold}
-🏅积分{point}
-🏅经验{exp}
-🏅等级{rank}
-🏅补签卡{cards}"""
+🏅金币:{gold}
+🏅积分:{point}
+🏅经验:{exp}
+🏅等级:{rank}
+🏅补签卡:{cards}\n"""
 
             print(msg)
-            return sep + "\n" + msg + "\n"
+            return sep + "\n" + msg
         else:
             print("登录失败", resp.json())
             msg += "登录失败\n"
