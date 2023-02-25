@@ -1,5 +1,11 @@
-# 什么值得买每日签到脚本 for 青龙面板
+# 什么值得买每日签到脚本 2023 for 青龙面板
 
-**务必自行更改为随机时间**
+## 使用方法
 
-按照 config/config_example.toml 例子配置文件生成自己的配置文件 config.toml
+### 青龙导入命令
+
+```bash
+ql repo https://github.com/hex-ci/smzdm_script.git "smzdm_checkin.py" "" "" "" "py"
+```
+
+**建议更改定时为随机时间**
