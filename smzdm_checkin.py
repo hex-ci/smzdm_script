@@ -88,10 +88,10 @@ class SmzdmBot(object):
 🏅积分{point}
 🏅经验{exp}
 🏅等级{rank}
-🏅补签卡{cards}\n"""
+🏅补签卡{cards}"""
 
             print(msg)
-            return sep + "\n" + msg
+            return sep + "\n" + msg + "\n"
         else:
             print("登录失败", resp.json())
             msg += "登录失败\n"
@@ -115,9 +115,9 @@ class SmzdmBot(object):
                     ]["continue_checkin_reward_show"]
                     break
         except Exception as e:
-            print(f"检查额外奖励失败: {e}")
+            print(f"检查额外奖励失败: {e}\n")
         if not continue_checkin_reward_show:
-            print("今天没有额外奖励")
+            print("今天没有额外奖励\n")
             return
         url = "https://user-api.smzdm.com/checkin/extra_reward"
         data = self._data()
