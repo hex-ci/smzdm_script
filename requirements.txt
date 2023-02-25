@@ -1,5 +1,4 @@
 APScheduler==3.10.0
-loguru==0.6.0
 prettytable==3.6.0
 requests==2.28.2
 toml==0.10.2

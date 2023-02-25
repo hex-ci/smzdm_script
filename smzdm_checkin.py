@@ -12,7 +12,6 @@ from pathlib import Path
 
 import prettytable as pt
 import requests
-from loguru import logger
 from notify import send
 from utils.file_helper import TomlHelper
 
@@ -77,7 +76,7 @@ class SmzdmBot(object):
             tb = pt.PrettyTable()
             tb.field_names = ["签到天数", "金币", "积分", "经验", "等级", "补签卡"]
             tb.add_row([checkin_num, gold, point, exp, rank, cards])
-            logger.info(f"\n{tb}")
+            print(f"\n{tb}")
             msg = f"""\n⭐签到成功{checkin_num}天
 🏅金币{gold}
 🏅积分{point}
@@ -86,7 +85,7 @@ class SmzdmBot(object):
 🏅补签卡{cards}"""
             return msg
         else:
-            logger.error("Faile to sign in")
+            print("Faile to sign in")
             msg = "Fail to login in"
             return msg
 
@@ -95,7 +94,7 @@ class SmzdmBot(object):
         data = self._data()
         resp = self.session.post(url, data)
         if resp.status_code == 200 and int(resp.json()["error_code"]) == 0:
-            logger.info(resp.json()["data"])
+            print(resp.json()["data"])
 
     def extra_reward(self):
         continue_checkin_reward_show = False
@@ -108,14 +107,14 @@ class SmzdmBot(object):
                     ]["continue_checkin_reward_show"]
                     break
         except Exception as e:
-            logger.error(f"Fail to check extra reward: {e}")
+            print(f"Fail to check extra reward: {e}")
         if not continue_checkin_reward_show:
-            logger.info("No extra reward today")
+            print("No extra reward today")
             return
         url = "https://user-api.smzdm.com/checkin/extra_reward"
         data = self._data()
         resp = self.session.post(url, data)
-        logger.info(resp.json()["data"])
+        print(resp.json()["data"])
 
     def _show_view_v2(self):
         url = "https://user-api.smzdm.com/checkin/show_view_v2"
@@ -128,18 +127,18 @@ class SmzdmBot(object):
         url = "https://user-api.smzdm.com/vip"
         data = self._data()
         resp = self.session.post(url, data)
-        logger.info(resp.json()["data"])
+        print(resp.json()["data"])
 
 
 def conf_kwargs():
     conf_kwargs = {}
 
     if Path.exists(Path(CONFIG_PATH, "config.toml")):
-        logger.info("Get configration from config.toml")
+        print("Get configration from config.toml")
         conf_kwargs = TomlHelper(Path(CONFIG_PATH, "config.toml")).read()
         conf_kwargs.update({"toml_conf": True})
     elif os.environ.get("ANDROID_COOKIE", None):
-        logger.info("Get configration from env")
+        print("Get configration from env")
         conf_kwargs = {
             "USER_AGENT": os.environ.get("USER_AGENT"),
             "SK": os.environ.get("SK"),
@@ -148,7 +147,7 @@ def conf_kwargs():
         }
         conf_kwargs.update({"env_conf": True})
     else:
-        logger.info("Please set cookies first")
+        print("Please set cookies first")
         sys.exit(1)
     return conf_kwargs
 
@@ -163,7 +162,7 @@ def main(conf_kwargs):
                 bot.all_reward()
                 bot.extra_reward()
             except Exception as e:
-                logger.error(e)
+                print(e)
                 continue
         send("什么值得买签到", msg)
     else:
@@ -173,7 +172,7 @@ def main(conf_kwargs):
         bot.extra_reward()
         send("什么值得买签到", msg)
     if msg is None or "Fail to login in" in msg:
-        logger.error("Fail the Github action job")
+        print("Fail the Github action job")
         sys.exit(1)
 
 
