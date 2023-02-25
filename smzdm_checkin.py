@@ -141,7 +141,7 @@ class SmzdmBot(object):
 def conf_kwargs():
     conf_kwargs = []
 
-    if os.environ["SMZDM_COOKIE"]:
+    if os.environ.get("SMZDM_COOKIE", None):
         cookies = os.environ["SMZDM_COOKIE"].split("&")
         for cookie in cookies:
             try:
