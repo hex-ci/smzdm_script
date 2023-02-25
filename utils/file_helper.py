@@ -1,6 +1,5 @@
 import toml
 
-
 class TomlHelper:
     def __init__(self, toml_filename):
         self.t_dict = dict()

@@ -1,3 +1,8 @@
+"""
+0 8 * * * smzdm_checkin.py
+const $ = new Env("什么值得买签到");
+"""
+
 import hashlib
 import os
 import random
@@ -8,7 +13,7 @@ from pathlib import Path
 import prettytable as pt
 import requests
 from loguru import logger
-from notify.notify import NotifyBot
+from notify import send
 from utils.file_helper import TomlHelper
 
 CURRENT_PATH = Path(__file__).parent.resolve()
@@ -74,11 +79,11 @@ class SmzdmBot(object):
             tb.add_row([checkin_num, gold, point, exp, rank, cards])
             logger.info(f"\n{tb}")
             msg = f"""\n⭐签到成功{checkin_num}天
-            🏅金币{gold}
-            🏅积分{point}
-            🏅经验{exp}
-            🏅等级{rank}
-            🏅补签卡{cards}"""
+🏅金币{gold}
+🏅积分{point}
+🏅经验{exp}
+🏅等级{rank}
+🏅补签卡{cards}"""
             return msg
         else:
             logger.error("Faile to sign in")
@@ -140,11 +145,6 @@ def conf_kwargs():
             "SK": os.environ.get("SK"),
             "ANDROID_COOKIE": os.environ.get("ANDROID_COOKIE"),
             "TOKEN": os.environ.get("TOKEN"),
-            "PUSH_PLUS_TOKEN": os.environ.get("PUSH_PLUS_TOKEN", None),
-            "SC_KEY": os.environ.get("SC_KEY", None),
-            "TG_BOT_TOKEN": os.environ.get("TG_BOT_TOKEN", None),
-            "TG_USER_ID": os.environ.get("TG_USER_ID", None),
-            "TG_BOT_API": os.environ.get("TG_BOT_API", None),
         }
         conf_kwargs.update({"env_conf": True})
     else:
@@ -165,13 +165,13 @@ def main(conf_kwargs):
             except Exception as e:
                 logger.error(e)
                 continue
-        NotifyBot(content=msg, **conf_kwargs["notify"])
+        send("什么值得买签到", msg)
     else:
         bot = SmzdmBot(conf_kwargs)
         msg = bot.checkin()
         bot.all_reward()
         bot.extra_reward()
-        NotifyBot(content=msg, **conf_kwargs)
+        send("什么值得买签到", msg)
     if msg is None or "Fail to login in" in msg:
         logger.error("Fail the Github action job")
         sys.exit(1)
