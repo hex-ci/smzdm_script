@@ -23,7 +23,7 @@ if (process.env.SMZDM_COOKIE) {
 
 !(async () => {
   if (!cookiesArr[0]) {
-    $.msg($.name, '请先设置 SMZDM_COOKIE 环境变量');
+    $.log('请先设置 SMZDM_COOKIE 环境变量');
     return;
   }
 
