@@ -22,49 +22,50 @@ if (process.env.SMZDM_COOKIE) {
 }
 
 !(async () => {
-	if (!cookiesArr[0]) {
-		$.msg($.name, '请先设置 SMZDM_COOKIE 环境变量');
-		return;
-	}
+  if (!cookiesArr[0]) {
+    $.msg($.name, '请先设置 SMZDM_COOKIE 环境变量');
+    return;
+  }
 
   let notifyContent = '';
 
-	for (let i = 0; i < cookiesArr.length; i++) {
-		if (cookiesArr[i]) {
-			const cookie = cookiesArr[i];
+  for (let i = 0; i < cookiesArr.length; i++) {
+    if (cookiesArr[i]) {
+      if (i > 0) {
+        $.log('\n延时 5 秒执行\n');
+        await $.wait(5000)
+      }
 
-			console.log(`\n******开始账号${i + 1}*********\n`);
+      const cookie = cookiesArr[i];
+      const sep = `\n******开始账号${i + 1}******\n`;
 
       const msg = await lottery(cookie);
 
-      notifyContent += msg;
+      notifyContent += sep + msg + "\n";
 
-      $.msg(msg);
-
-      await $.wait(5000)
-		}
-	}
+      $.log(sep + msg + "\n");
+    }
+  }
 
   await notify.sendNotify($.name, notifyContent);
 })()
-	.catch((e) => {
-		$.log('', `❌ ${$.name}, 失败! 原因: ${e}!`, '')
-	})
-	.finally(() => {
-		$.done();
-	})
+  .catch((e) => {
+    $.log('', `❌ ${$.name}, 失败! 原因: ${e}!`, '')
+  })
+  .finally(() => {
+    $.done();
+  });
 
 
 // 每日抽奖
 async function lottery(cookie) {
-  let activeId = "";
+  let activeId = '';
 
   try {
     const resp = await $.http.get({
       url: "https://m.smzdm.com/zhuanti/life/choujiang/",
       headers: {
-        Accept:
-        "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
         "Accept-Encoding": "gzip, deflate, br",
         "Accept-Language": "zh-cn",
         Connection: "keep-alive",
@@ -109,9 +110,9 @@ async function lottery(cookie) {
         return "每日抽奖失败，接口响应异常";
       }
     }
-  }
-  catch (error) {
+  } catch (error) {
     $.log(`每日抽奖失败，${error}`);
+    return "每日抽奖失败，接口响应异常";
   }
 }
 
