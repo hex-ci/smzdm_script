@@ -1,11 +1,16 @@
-# 什么值得买每日签到脚本 2023 for 青龙面板
+# 什么值得买脚本 2023 for 青龙面板
+
+## 脚本内容
+
+* 每日签到
+* 每日抽奖
 
 ## 使用方法
 
 ### 青龙拉库
 
 ```bash
-ql repo https://github.com/hex-ci/smzdm_script.git "smzdm_checkin.py" "" "" "" "py"
+ql repo https://github.com/hex-ci/smzdm_script.git "" "" "" "" "py js"
 ```
 
 建议更改定时为随机时间
