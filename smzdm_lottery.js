@@ -70,7 +70,7 @@ async function lottery(cookie) {
         "Accept-Language": "zh-cn",
         Connection: "keep-alive",
         Host: "m.smzdm.com",
-        "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 14_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148/smzdm 9.9.6 rv:93.4 (iPhone13,4; iOS 14.5; zh_CN)/iphone_smzdmapp/9.9.6/wkwebview/jsbv_1.0.0",
+        "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 14_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148/smzdm 10.4.25 rv:93.4 (iPhone13,4; iOS 14.5; zh_CN)/iphone_smzdmapp/10.4.25/wkwebview/jsbv_1.0.0",
         Cookie: cookie
       }
     });
@@ -92,7 +92,7 @@ async function lottery(cookie) {
           Connection: "keep-alive",
           Host: "zhiyou.smzdm.com",
           Referer: "https://m.smzdm.com/zhuanti/life/choujiang/",
-          "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 14_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148/smzdm 9.9.0 rv:91 (iPhone 11 Pro Max; iOS 14.2; zh_CN)/iphone_smzdmapp/9.9.0/wkwebview/jsbv_1.0.0",
+          "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 14_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148/smzdm 10.4.25 rv:93.4 (iPhone13,4; iOS 14.5; zh_CN)/iphone_smzdmapp/10.4.25/wkwebview/jsbv_1.0.0",
           Cookie: cookie
         }
       });
