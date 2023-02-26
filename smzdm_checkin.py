@@ -84,11 +84,11 @@ class SmzdmBot(object):
             cards = resp_data["cards"]
 
             msg = f"""⭐签到成功{checkin_num}天
-🏅金币:{gold}
-🏅积分:{point}
-🏅经验:{exp}
-🏅等级:{rank}
-🏅补签卡:{cards}\n"""
+🏅金币: {gold}
+🏅积分: {point}
+🏅经验: {exp}
+🏅等级: {rank}
+🏅补签卡: {cards}\n"""
 
             print(msg)
             return sep + "\n" + msg
@@ -146,6 +146,7 @@ def conf_kwargs():
         for cookie in cookies:
             try:
                 token = re.findall(r"sess=(.*?);", cookie)[0]
+                cookie = cookie.replace("iphone", "android").replace("iPhone", "Android").replace("apk_partner_name=appstore", "apk_partner_name=android")
                 conf_kwargs.append({
                     "SK": "1",
                     "COOKIE": cookie,
