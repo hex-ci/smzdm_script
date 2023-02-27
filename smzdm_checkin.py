@@ -103,7 +103,7 @@ class SmzdmBot(object):
         if resp.status_code == 200 and int(resp.json()["error_code"]) == 0:
             resp_data = resp.json()["data"]
             print(resp_data["normal_reward"]["reward_add"]["title"] + ": " + resp_data["normal_reward"]["reward_add"]["content"])
-            print(resp_data["normal_reward"]["gift"]["title"] + ": " + resp_data["normal_reward"]["gift"]["content_str"])
+            print(resp_data["normal_reward"]["gift"]["title"] + ": " + resp_data["normal_reward"]["gift"]["content_str"] + "\n")
 
     def extra_reward(self):
         continue_checkin_reward_show = False
@@ -123,7 +123,8 @@ class SmzdmBot(object):
         url = "https://user-api.smzdm.com/checkin/extra_reward"
         data = self._data()
         resp = self.session.post(url, data)
-        print(resp.json()["data"])
+        resp_data = resp.json()["data"]
+        print(resp_data["title"] + ": " + re.sub('<[^<]+?>', '', resp_data["gift"]["content"]) + "\n")
 
     def _show_view_v2(self):
         url = "https://user-api.smzdm.com/checkin/show_view_v2"
