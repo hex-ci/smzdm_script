@@ -11,14 +11,13 @@ import random
 import sys
 import time
 import re
-
 import requests
 from notify import send
 
 
 class SmzdmBot(object):
     KEY = "apr1$AwP!wRRT$gJ/q.X24poeBInlUJC"
-    DEFAULT_USER_AGENT = "smzdm_android_V10.4.25 rv:860 (Redmi Note 3;Android10;zh)smzdmapp"
+    DEFAULT_USER_AGENT = "smzdm_android_V10.2.0 rv:860 (Redmi Note 3;Android10;zh)smzdmapp"
 
     def __init__(self, conf_kwargs: dict, index):
         self.conf_kwargs = conf_kwargs
@@ -37,20 +36,22 @@ class SmzdmBot(object):
         self.session.headers = headers
 
     def _data(self):
-        time = self.start_timestamp * 1000
-        sk = self.conf_kwargs.get("SK")
+        self.start_timestamp = int(time.time())
+        self._set_header()
+        microtime = self.start_timestamp * 1000
+        sk = "1"
         token = self.conf_kwargs.get("TOKEN")
-        sign_str = f"f=android&sk={sk}&time={time}&token={token}&v=10.4.25&weixin=1&key={self.KEY}"
+        sign_str = f"f=android&sk={sk}&time={microtime}&token={token}&v=10.2.0&weixin=1&key={self.KEY}"
         sign = self._str_to_md5(sign_str).upper()
         data = {
             "weixin": "1",
             "captcha": "",
             "f": "android",
-            "v": "10.4.25",
+            "v": "10.2.0",
             "sk": sk,
             "sign": sign,
             "touchstone_event": "",
-            "time": time,
+            "time": microtime,
             "token": token,
         }
         return data
@@ -68,8 +69,6 @@ class SmzdmBot(object):
         sep = "\n********开始账号" + str(self.index) + "********"
         print(sep + "\n")
 
-        self.start_timestamp = int(time.time())
-        self._set_header()
         data = self._data()
 
         resp = self.session.post(url, data)
@@ -98,11 +97,13 @@ class SmzdmBot(object):
             return sep + "\n" + msg
 
     def all_reward(self):
-        url = "https://user-api.smzdm.com/checkin/extra_reward"
+        url = "https://user-api.smzdm.com/checkin/all_reward"
         data = self._data()
         resp = self.session.post(url, data)
         if resp.status_code == 200 and int(resp.json()["error_code"]) == 0:
-            print(resp.json()["data"])
+            resp_data = resp.json()["data"]
+            print(resp_data["normal_reward"]["reward_add"]["title"] + ": " + resp_data["normal_reward"]["reward_add"]["content"])
+            print(resp_data["normal_reward"]["gift"]["title"] + ": " + resp_data["normal_reward"]["gift"]["content_str"])
 
     def extra_reward(self):
         continue_checkin_reward_show = False
@@ -148,7 +149,6 @@ def conf_kwargs():
                 token = re.findall(r"sess=(.*?);", cookie)[0]
                 cookie = cookie.replace("iphone", "android").replace("iPhone", "Android").replace("apk_partner_name=appstore", "apk_partner_name=android")
                 conf_kwargs.append({
-                    "SK": "1",
                     "COOKIE": cookie,
                     "TOKEN": token,
                 })
