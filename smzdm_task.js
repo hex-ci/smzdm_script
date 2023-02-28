@@ -390,7 +390,7 @@ async function run(cookie) {
 
       const msg = await run(cookie);
 
-      $.log(msg);
+      $.log(msg + "\n");
 
       notifyContent += sep + msg + "\n";
     }
