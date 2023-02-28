@@ -4,13 +4,14 @@
 
 * 每日签到
 * 每日抽奖
+* 每日任务(Beta)，只完成文章浏览和分享任务
 
 ## 使用方法
 
 ### 青龙拉库
 
 ```bash
-ql repo https://github.com/hex-ci/smzdm_script.git "" "" "" "" "py js"
+ql repo https://github.com/hex-ci/smzdm_script.git "" "" "env.js" "" "py js"
 ```
 
 建议更改定时为随机时间
