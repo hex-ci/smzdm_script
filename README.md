@@ -11,7 +11,7 @@
 ### 青龙拉库
 
 ```bash
-ql repo https://github.com/hex-ci/smzdm_script.git "" "env.js" "env.js" "" ""
+ql repo https://github.com/hex-ci/smzdm_script.git "" "env.js" "env.js"
 ```
 
 建议更改定时为随机时间
