@@ -2,7 +2,7 @@
 什么值得买任务脚本
 项目地址: https://github.com/hex-ci/smzdm_script
 
-cron: 20 8 * * *
+cron: 20 14 * * *
 */
 
 const crypto = require('crypto')
