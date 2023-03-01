@@ -171,11 +171,13 @@ async function receiveReward(taskId, cookie) {
     const data = parseJSON(response.body);
 
     if (data.error_code == '0') {
-      $.log(data.data.reward_msg);
+      const msg = data.data.reward_msg.replace(/<[^<]+?>/g, '');
+
+      $.log(msg);
 
       return {
         isSuccess: true,
-        msg: data.data.reward_msg
+        msg
       };
     }
     else {
