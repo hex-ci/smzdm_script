@@ -5,7 +5,7 @@
 cron: 20 14 * * *
 */
 
-const crypto = require('crypto')
+const crypto = require('crypto');
 
 const Env = require('./env');
 const notify = require('./sendNotify');
@@ -18,9 +18,11 @@ let cookiesArr = [];
 if (process.env.SMZDM_COOKIE) {
   if (process.env.SMZDM_COOKIE.indexOf('&') > -1) {
     cookiesArr = process.env.SMZDM_COOKIE.split('&');
-  } else if (process.env.SMZDM_COOKIE.indexOf('\n') > -1) {
+  }
+  else if (process.env.SMZDM_COOKIE.indexOf('\n') > -1) {
     cookiesArr = process.env.SMZDM_COOKIE.split('\n');
-  } else {
+  }
+  else {
     cookiesArr = [process.env.SMZDM_COOKIE];
   }
 }
@@ -135,7 +137,7 @@ async function getTaskList(cookie) {
   });
 
   if (isSuccess) {
-    return data.data.rows[0].cell_data.activity_task.accumulate_list.task_list
+    return data.data.rows[0].cell_data.activity_task.accumulate_list.task_list;
   }
   else {
     return [];
@@ -317,7 +319,7 @@ async function doViewTask(task, cookie) {
 
   if (isSuccess) {
     $.log('延迟 3 秒领取奖励');
-    await $.wait(3000)
+    await $.wait(3000);
 
     const rewardResult = await receiveReward(task.task_id, cookie);
 
@@ -362,7 +364,7 @@ async function doShareTaskMulti(task, cookie) {
   }
 
   $.log('延迟 3 秒领取奖励');
-  await $.wait(3000)
+  await $.wait(3000);
 
   const rewardResult = await receiveReward(task.task_id, cookie);
 
@@ -390,7 +392,7 @@ async function doShareTaskSingle(task, cookie) {
   }
 
   $.log('延迟 5 秒领取奖励');
-  await $.wait(5000)
+  await $.wait(5000);
 
   const rewardResult = await receiveReward(task.task_id, cookie);
 
@@ -449,7 +451,7 @@ async function run(cookie) {
     if (cookiesArr[i]) {
       if (i > 0) {
         $.log('\n延迟 5 秒执行\n');
-        await $.wait(5000)
+        await $.wait(5000);
       }
 
       const cookie = cookiesArr[i];
@@ -459,9 +461,9 @@ async function run(cookie) {
 
       const msg = await run(cookie);
 
-      $.log(msg + "\n");
+      $.log(msg + '\n');
 
-      notifyContent += sep + msg + "\n";
+      notifyContent += sep + msg + '\n';
     }
   }
 
