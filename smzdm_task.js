@@ -223,14 +223,53 @@ async function getArticleList(cookie) {
   }
 }
 
-async function shareCallback(article, cookie) {
+// 分享的每日奖励
+async function shareDailyReward(channelId, cookie) {
+  try {
+    const response = await $.http.post({
+      url: 'https://user-api.smzdm.com/share/daily_reward',
+      headers: getHeaders(cookie),
+      form: signFormData({
+        channel_id: channelId,
+        token: getToken(cookie)
+      })
+    });
+
+    const data = parseJSON(response.body);
+
+    if (data.error_code == '0') {
+      $.log(data.data.reward_desc);
+      return {
+        isSuccess: true,
+        msg: data.data.reward_desc
+      };
+    }
+    else {
+      $.log(data.error_msg);
+      return {
+        isSuccess: false,
+        msg: data.error_msg
+      };
+    }
+  }
+  catch (e) {
+    $.log('分享每日奖励请求失败！');
+    return {
+      isSuccess: false,
+      msg: '分享每日奖励请求失败！'
+    };
+  }
+}
+
+// 分享完成后回调接口
+async function shareCallback(articleId, channelId, cookie) {
   try {
     const response = await $.http.post({
       url: 'https://user-api.smzdm.com/share/callback',
       headers: getHeaders(cookie),
       form: signFormData({
-        article_id: article.article_hash_id,
-        channel_id: article.channel_id,
+        article_id: articleId,
+        channel_id: channelId,
         touchstone_event: '{}',
         token: getToken(cookie)
       })
@@ -262,14 +301,15 @@ async function shareCallback(article, cookie) {
   }
 }
 
-async function shareArticleDone(article, cookie) {
+// 分享完成，可以领取奖励了
+async function shareArticleDone(articleId, channelId, cookie) {
   try {
     const response = await $.http.post({
       url: 'https://user-api.smzdm.com/share/article_reward',
       headers: getHeaders(cookie),
       form: signFormData({
-        article_id: article.article_hash_id,
-        channel_id: article.channel_id,
+        article_id: articleId,
+        channel_id: channelId,
         token: getToken(cookie)
       })
     });
@@ -300,8 +340,8 @@ async function shareArticleDone(article, cookie) {
   }
 }
 
-// 执行分享任务
-async function doShareTask(task, cookie) {
+// 执行多篇文章的分享任务
+async function doShareTaskMulti(task, cookie) {
   $.log(`开始任务: ${task.task_name}`);
 
   try {
@@ -312,12 +352,14 @@ async function doShareTask(task, cookie) {
 
       const article = articles[i];
 
-      await shareCallback(article, cookie);
-
-      $.log('等候 3 秒');
+      $.log('等候 5 秒');
       $.wait(3000);
 
-      await shareArticleDone(article, cookie);
+      await shareDailyReward(article.channel_id, cookie);
+
+      await shareCallback(article.article_hash_id, article.channel_id, cookie);
+
+      await shareArticleDone(article.article_hash_id, article.channel_id, cookie);
 
       $.log('等候 5 秒');
       $.wait(5000);
@@ -325,6 +367,36 @@ async function doShareTask(task, cookie) {
 
     $.log('延迟 3 秒领取奖励');
     await $.wait(3000)
+
+    const rewardResult = await receiveReward(task.task_id, cookie);
+
+    return rewardResult;
+  }
+  catch (e) {
+    return {
+      isSuccess: false
+    };
+  }
+}
+
+// 执行一篇文章的分享任务
+async function doShareTaskSingle(task, cookie) {
+  $.log(`开始任务: ${task.task_name}`);
+
+  try {
+    $.log(`开始分享文章...`);
+
+    $.log('等候 5 秒');
+    $.wait(5000);
+
+    await shareDailyReward(task.channel_id, cookie);
+
+    await shareCallback(task.task_redirect_url.link_val, task.channel_id, cookie);
+
+    await shareArticleDone(task.task_redirect_url.link_val, task.channel_id, cookie);
+
+    $.log('延迟 5 秒领取奖励');
+    await $.wait(5000)
 
     const rewardResult = await receiveReward(task.task_id, cookie);
 
@@ -356,7 +428,14 @@ async function run(cookie) {
       $.wait(5000);
     }
     else if (task.task_status == '2' && task.task_event_type == 'interactive.share') {
-      const result = await doShareTask(task, cookie);
+      let result;
+
+      if (task.article_id == '0') {
+        result = await doShareTaskMulti(task, cookie);
+      }
+      else {
+        result = await doShareTaskSingle(task, cookie);
+      }
 
       if (result.isSuccess) {
         count++;
