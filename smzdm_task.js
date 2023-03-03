@@ -29,6 +29,8 @@ if (process.env.SMZDM_COOKIE) {
 
 const SIGN_KEY = 'apr1$AwP!wRRT$gJ/q.X24poeBInlUJC';
 const DEFAULT_USER_AGENT = 'smzdm_android_V10.2.0 rv:860 (Redmi Note 3;Android10;zh)smzdmapp';
+const DEFAULT_WEB_USER_AGENT = 'Mozilla/5.0 (Linux; Android 7.1.1;) AppleWebKit/537.36 (KHTML, like Gecko) Mobile/15E148/smzdm 10.2.0 rv:106.1';
+const FOLLOW_USERS = [5874442461, 3050600933, 7466566467, 3028144837, 4573019331, 6375174216, 7987627594, 9730899715, 5034569705, 6470041157];
 
 function randomStr(len = 18) {
   const char = '0123456789';
@@ -54,12 +56,17 @@ function getToken(cookie) {
   return match ? match[1] : '';
 }
 
-function getHeaders(cookie) {
-  return {
+function getHeaders(cookie, isWeb = false) {
+  return isWeb ? {
+    Accept: '*/*',
+    'Accept-Encoding': 'gzip',
+    'Accept-Language': 'zh-CN,zh-Hans;q=0.9',
+    'User-Agent': DEFAULT_WEB_USER_AGENT,
+    Cookie: cookie.replace('iphone', 'android').replace('iPhone', 'Android').replace('apk_partner_name=appstore', 'apk_partner_name=android')
+  } : {
     'User-Agent': process.env.SMZDM_USER_AGENT || DEFAULT_USER_AGENT,
     'Accept-Language': 'zh-Hans-CN;q=1',
     'Accept-Encoding': 'gzip',
-    'Connection': 'Keep-Alive',
     'request_key': randomStr(18),
     Cookie: cookie.replace('iphone', 'android').replace('iPhone', 'Android').replace('apk_partner_name=appstore', 'apk_partner_name=android')
   };
@@ -86,6 +93,10 @@ function signFormData(data) {
   };
 }
 
+function removeTags(str) {
+  return str.replace(/<[^<]+?>/g, '');
+}
+
 // 公共请求函数
 async function requestApi(url, inputOptions = {}) {
   const options = { ...inputOptions };
@@ -105,19 +116,20 @@ async function requestApi(url, inputOptions = {}) {
   return $.http[options.method]({
     url,
     headers: options.headers,
-    form: options.method === 'post' ? options.data : {}
+    form: options.method === 'post' ? options.data : undefined
   }).then((response) => {
-    const data = parseJSON(response.body);
+    const data = options.parseJSON === false ? response.body : parseJSON(response.body);
 
     return {
-      isSuccess: data.error_code == '0',
+      isSuccess: options.parseJSON === false ? true : (data.error_code == '0'),
       response: response.body,
       data
     };
   }).catch((error) => {
     return {
       isSuccess: false,
-      response: error
+      response: error,
+      data: error
     };
   })
 }
@@ -137,10 +149,16 @@ async function getTaskList(cookie) {
   });
 
   if (isSuccess) {
-    return data.data.rows[0].cell_data.activity_task.accumulate_list.task_list;
+    return {
+      tasks: data.data.rows[0].cell_data.activity_task.accumulate_list.task_list,
+      detail: data.data.rows[0]
+    };
   }
   else {
-    return [];
+    return {
+      tasks: [],
+      detail: {}
+    };
   }
 }
 
@@ -156,7 +174,7 @@ async function receiveReward(taskId, cookie) {
   });
 
   if (isSuccess) {
-    const msg = data.data.reward_msg.replace(/<[^<]+?>/g, '');
+    const msg = removeTags(data.data.reward_msg);
 
     $.log(msg);
 
@@ -180,13 +198,8 @@ async function getArticleList(cookie) {
   const { isSuccess, data, response } = await requestApi('https://post.smzdm.com/json_more/?tab_id=tuijian&filterUrl=tuijian', {
     sign: false,
     headers: {
-      Accept: '*/*',
-      'Accept-Encoding': 'gzip',
-      'Accept-Language': 'zh-cn',
-      Connection: 'keep-alive',
-      Referer: 'https://post.smzdm.com/',
-      'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 14_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148/smzdm 10.4.25 rv:93.4 (iPhone13,4; iOS 14.5; zh_CN)/iphone_smzdmapp/10.4.25/wkwebview/jsbv_1.0.0',
-      Cookie: cookie
+      ...getHeaders(cookie, true),
+      Referer: 'https://post.smzdm.com/'
     }
   });
 
@@ -300,6 +313,121 @@ async function shareArticleDone(articleId, channelId, cookie) {
   }
 }
 
+// 获取免费抽奖信息
+async function getFreeCrowd(cookie) {
+  const { isSuccess, data } = await requestApi('https://zhiyou.smzdm.com/user/crowd/', {
+    sign: false,
+    parseJSON: false,
+    headers: getHeaders(cookie, true)
+  });
+
+  if (isSuccess) {
+    const match = data.match(/<button\s+([^>]+?)>\s+?<div\s+[^>]+?>\s*免费抽奖\s*<\/div>\s+<span\s+class="reduceNumber">-0<\/span>[\s\S]+?<\/button>/i);
+
+    if (match) {
+      const matchCrowd = match[1].match(/data-crowd_id="(\d+)"/i);
+
+      if (matchCrowd) {
+        $.log(`免费抽奖ID: ${matchCrowd[1]}`);
+        return {
+          isSuccess: true,
+          data: matchCrowd[1]
+        }
+      }
+      else {
+        $.log(`未找到免费抽奖ID`);
+        return {
+          isSuccess: false
+        }
+      }
+    }
+    else {
+      $.log(`未找到免费抽奖`);
+      return {
+        isSuccess: false
+      }
+    }
+  }
+  else {
+    $.log(`获取免费抽奖失败: ${data}`);
+    return [];
+  }
+}
+
+// 参加抽奖
+async function joinCrowd(id, cookie) {
+  const { isSuccess, data, response } = await requestApi('https://zhiyou.m.smzdm.com/user/crowd/ajax_participate', {
+    method: 'post',
+    sign: false,
+    headers: {
+      ...getHeaders(cookie, true),
+      Origin: 'https://zhiyou.m.smzdm.com',
+      Referer: `https://zhiyou.m.smzdm.com/user/crowd/p/${id}/`,
+    },
+    data: {
+      crowd_id: id,
+      sourcePage: `https://zhiyou.m.smzdm.com/user/crowd/p/${id}/`,
+      client_type: 'android',
+      sourceRoot: '个人中心',
+      sourceMode: '幸运屋抽奖',
+      price_id: '1'
+    }
+  });
+
+  if (isSuccess) {
+    $.log(removeTags(data.data.msg));
+  }
+  else {
+    $.log(`参加免费抽奖失败: ${response}`);
+  }
+
+  return {
+    isSuccess,
+    response
+  };
+}
+
+// 关注用户
+async function followUser(id, isFollow = true, cookie) {
+  const { isSuccess, response } = await requestApi('https://zhiyou.smzdm.com/guanzhu/ajax_follow', {
+    method: 'post',
+    sign: false,
+    headers: {
+      ...getHeaders(cookie, true),
+      Origin: 'https://post.smzdm.com',
+      Referer: `https://post.smzdm.com/`,
+    },
+    data: {
+      follow: isFollow ? 1 : 0,
+      type: 'user',
+      keyword: id,
+      source: '无',
+      operationalpositionID: '无',
+      aid: '无',
+      cid: '无',
+      atp: '无',
+      tagID: '无',
+      p: '1',
+      is_detail: '0',
+      sourcePage: 'https://post.smzdm.com/',
+      sourceMode: '无',
+      client_type: 'android'
+    }
+  });
+
+  if (isSuccess) {
+    $.log(`关注/取关成功: ${id}`);
+  }
+  else {
+    $.log(`关注/取关失败！${response}`);
+  }
+
+  return {
+    isSuccess,
+    response
+  };
+}
+
 // 执行浏览任务
 async function doViewTask(task, cookie) {
   $.log(`开始任务: ${task.task_name}`);
@@ -321,9 +449,7 @@ async function doViewTask(task, cookie) {
     $.log('延迟 3 秒领取奖励');
     await $.wait(3000);
 
-    const rewardResult = await receiveReward(task.task_id, cookie);
-
-    return rewardResult;
+    return await receiveReward(task.task_id, cookie);
   }
   else {
     $.log(`任务异常！${response}`);
@@ -346,29 +472,24 @@ async function doShareTaskMulti(task, cookie) {
     const article = articles[i];
 
     $.log('等候 5 秒');
-    $.wait(3000);
+    await $.wait(3000);
 
     await shareDailyReward(article.channel_id, cookie);
     await shareCallback(article.article_hash_id, article.channel_id, cookie);
 
-    const { isSuccess } = await shareArticleDone(article.article_hash_id, article.channel_id, cookie);
+    $.log('等候 3 秒');
+    await $.wait(3000);
 
-    if (!isSuccess) {
-      return {
-        isSuccess
-      };
-    }
+    await shareArticleDone(article.article_hash_id, article.channel_id, cookie);
 
     $.log('等候 5 秒');
-    $.wait(5000);
+    await $.wait(5000);
   }
 
   $.log('延迟 3 秒领取奖励');
   await $.wait(3000);
 
-  const rewardResult = await receiveReward(task.task_id, cookie);
-
-  return rewardResult;
+  return await receiveReward(task.task_id, cookie);
 }
 
 // 执行一篇文章的分享任务
@@ -378,12 +499,27 @@ async function doShareTaskSingle(task, cookie) {
   $.log(`开始分享文章...`);
 
   $.log('等候 5 秒');
-  $.wait(5000);
+  await $.wait(5000);
 
   await shareDailyReward(task.channel_id, cookie);
   await shareCallback(task.task_redirect_url.link_val, task.channel_id, cookie);
 
-  const { isSuccess } = await shareArticleDone(task.task_redirect_url.link_val, task.channel_id, cookie);
+  $.log('等候 3 秒');
+  await $.wait(3000);
+
+  await shareArticleDone(task.task_redirect_url.link_val, task.channel_id, cookie);
+
+  $.log('延迟 5 秒领取奖励');
+  await $.wait(5000);
+
+  return await receiveReward(task.task_id, cookie);
+}
+
+// 执行抽奖任务
+async function doCrowdTask(task, cookie) {
+  $.log(`开始任务: ${task.task_name}`);
+
+  const { isSuccess, data } = await getFreeCrowd(cookie);
 
   if (!isSuccess) {
     return {
@@ -391,23 +527,96 @@ async function doShareTaskSingle(task, cookie) {
     };
   }
 
+  $.log('等候 5 秒');
+  await $.wait(5000);
+
+  const result = await joinCrowd(data, cookie);
+
+  if (!result.isSuccess) {
+    return {
+      isSuccess: result.isSuccess
+    };
+  }
+
   $.log('延迟 5 秒领取奖励');
   await $.wait(5000);
 
-  const rewardResult = await receiveReward(task.task_id, cookie);
+  return await receiveReward(task.task_id, cookie);
+}
 
-  return rewardResult;
+// 执行关注任务（先取关，再关注，执行三次，最后取关）
+async function doFollowTask(task, cookie) {
+  $.log(`开始任务: ${task.task_name}`);
+
+  // 随机选一个用户操作
+  const userId = FOLLOW_USERS[Math.floor(Math.random() * FOLLOW_USERS.length)];
+
+  $.log('先尝试取关用户，如果出错表示尚未关注此用户，忽略这个错误即可。');
+  await followUser(userId, false, cookie);
+
+  $.log('等候 3 秒');
+  await $.wait(3000);
+
+  for (let i = 0; i < 3; i++) {
+    await followUser(userId, true, cookie);
+
+    $.log('等候 3 秒');
+    await $.wait(3000);
+
+    await followUser(userId, false, cookie);
+
+    $.log('等候 5 秒');
+    await $.wait(3000);
+  }
+
+  $.log('延迟 5 秒领取奖励');
+  await $.wait(5000);
+
+  return await receiveReward(task.task_id, cookie);
+}
+
+async function receiveActivity(activity, cookie) {
+  $.log(`领取活动奖励: ${activity.activity_name}`);
+
+  const { isSuccess, data, response } = await requestApi('https://user-api.smzdm.com/task/activity_receive', {
+    method: 'post',
+    headers: getHeaders(cookie),
+    data: {
+      activity_id: activity.activity_id,
+      token: getToken(cookie)
+    }
+  });
+
+  if (isSuccess) {
+    $.log(removeTags(data.data.reward_msg));
+
+    return {
+      isSuccess
+    };
+  }
+  else {
+    $.log(`领取活动奖励失败！${response}`);
+
+    return {
+      isSuccess
+    };
+  }
 }
 
 async function run(cookie) {
-  const tasks = await getTaskList(cookie);
+  const { tasks, detail } = await getTaskList(cookie);
 
   let count = 0;
 
   for (let i = 0; i < tasks.length; i++) {
     const task = tasks[i];
 
-    if (task.task_status == '2' && task.task_event_type == 'interactive.view.article') {
+    // 略过所有非未完成状态的任务
+    if (task.task_status != '2') {
+      continue;
+    }
+
+    if (task.task_event_type == 'interactive.view.article') {
       const result = await doViewTask(task, cookie);
 
       if (result.isSuccess) {
@@ -415,9 +624,9 @@ async function run(cookie) {
       }
 
       $.log('等候 5 秒');
-      $.wait(5000);
+      await $.wait(5000);
     }
-    else if (task.task_status == '2' && task.task_event_type == 'interactive.share') {
+    else if (task.task_event_type == 'interactive.share') {
       let result;
 
       if (task.article_id == '0') {
@@ -432,9 +641,35 @@ async function run(cookie) {
       }
 
       $.log('等候 5 秒');
-      $.wait(5000);
+      await $.wait(5000);
+    }
+    else if (task.task_event_type == 'guide.crowd') {
+      const result = await doCrowdTask(task, cookie);
+
+      if (result.isSuccess) {
+        count++;
+      }
+
+      $.log('等候 5 秒');
+      await $.wait(5000);
+    }
+    else if (task.task_event_type == 'interactive.follow.user') {
+      const result = await doFollowTask(task, cookie);
+
+      if (result.isSuccess) {
+        count++;
+      }
+
+      $.log('等候 5 秒');
+      await $.wait(5000);
     }
   }
+
+  $.log('等候 5 秒');
+  await $.wait(5000);
+
+  // 尝试领取活动奖励
+  await receiveActivity(detail.cell_data, cookie);
 
   return `成功完成任务数: ${count}`;
 }
