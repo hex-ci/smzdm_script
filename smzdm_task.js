@@ -28,9 +28,9 @@ if (process.env.SMZDM_COOKIE) {
 }
 
 const SIGN_KEY = 'apr1$AwP!wRRT$gJ/q.X24poeBInlUJC';
-const APP_VERSION = '10.2.0';
-const DEFAULT_USER_AGENT = `smzdm_android_V${APP_VERSION} rv:860 (Redmi Note 3;Android10;zh)smzdmapp`;
-const DEFAULT_WEB_USER_AGENT = `Mozilla/5.0 (Linux; Android 7.1.1;) AppleWebKit/537.36 (KHTML, like Gecko) Mobile/15E148/smzdm ${APP_VERSION} rv:860`;
+const APP_VERSION = '10.3.0';
+const DEFAULT_USER_AGENT = `smzdm_android_V${APP_VERSION} rv:121 (Redmi Note 3;Android10;zh)smzdmapp`;
+const DEFAULT_WEB_USER_AGENT = `Mozilla/5.0 (Linux; Android 7.1.1;) AppleWebKit/537.36 (KHTML, like Gecko) Mobile/15E148/smzdm ${APP_VERSION} rv:121`;
 const FOLLOW_USERS = [5874442461, 3050600933, 7466566467, 3028144837, 4573019331, 6375174216, 7987627594, 9730899715, 5034569705, 6470041157];
 
 function randomStr(len = 18) {
@@ -261,7 +261,6 @@ async function shareCallback(articleId, channelId, cookie) {
     data: {
       article_id: articleId,
       channel_id: channelId,
-      touchstone_event: '{}',
       token: getToken(cookie)
     }
   });
@@ -476,12 +475,12 @@ async function doShareTaskMulti(task, cookie) {
     await $.wait(3000);
 
     await shareDailyReward(article.channel_id, cookie);
-    await shareCallback(article.article_hash_id, article.channel_id, cookie);
+    await shareCallback(article.article_id, article.channel_id, cookie);
 
     $.log('等候 3 秒');
     await $.wait(3000);
 
-    await shareArticleDone(article.article_hash_id, article.channel_id, cookie);
+    await shareArticleDone(article.article_id, article.channel_id, cookie);
 
     $.log('等候 5 秒');
     await $.wait(5000);
@@ -503,12 +502,12 @@ async function doShareTaskSingle(task, cookie) {
   await $.wait(5000);
 
   await shareDailyReward(task.channel_id, cookie);
-  await shareCallback(task.task_redirect_url.link_val, task.channel_id, cookie);
+  await shareCallback(task.article_id, task.channel_id, cookie);
 
   $.log('等候 3 秒');
   await $.wait(3000);
 
-  await shareArticleDone(task.task_redirect_url.link_val, task.channel_id, cookie);
+  await shareArticleDone(task.article_id, task.channel_id, cookie);
 
   $.log('延迟 5 秒领取奖励');
   await $.wait(5000);
@@ -612,57 +611,66 @@ async function run(cookie) {
   for (let i = 0; i < tasks.length; i++) {
     const task = tasks[i];
 
-    // 略过所有非未完成状态的任务
-    if (task.task_status != '2') {
-      continue;
-    }
+    // 待领取任务
+    if (task.task_status == '3') {
+      const { isSuccess } = await receiveReward(task.task_id, cookie);
 
-    if (task.task_event_type == 'interactive.view.article') {
-      const result = await doViewTask(task, cookie);
-
-      if (result.isSuccess) {
+      if (isSuccess) {
         count++;
       }
 
       $.log('等候 5 秒');
       await $.wait(5000);
     }
-    else if (task.task_event_type == 'interactive.share') {
-      let result;
+    // 未完成任务
+    else if (task.task_status == '2') {
+      if (task.task_event_type == 'interactive.view.article') {
+        const result = await doViewTask(task, cookie);
 
-      if (task.article_id == '0') {
-        result = await doShareTaskMulti(task, cookie);
+        if (result.isSuccess) {
+          count++;
+        }
+
+        $.log('等候 5 秒');
+        await $.wait(5000);
       }
-      else {
-        result = await doShareTaskSingle(task, cookie);
+      else if (task.task_event_type == 'interactive.share') {
+        let result;
+
+        if (task.article_id == '0') {
+          result = await doShareTaskMulti(task, cookie);
+        }
+        else {
+          result = await doShareTaskSingle(task, cookie);
+        }
+
+        if (result.isSuccess) {
+          count++;
+        }
+
+        $.log('等候 5 秒');
+        await $.wait(5000);
       }
+      else if (task.task_event_type == 'guide.crowd') {
+        const result = await doCrowdTask(task, cookie);
 
-      if (result.isSuccess) {
-        count++;
+        if (result.isSuccess) {
+          count++;
+        }
+
+        $.log('等候 5 秒');
+        await $.wait(5000);
       }
+      else if (task.task_event_type == 'interactive.follow.user') {
+        const result = await doFollowTask(task, cookie);
 
-      $.log('等候 5 秒');
-      await $.wait(5000);
-    }
-    else if (task.task_event_type == 'guide.crowd') {
-      const result = await doCrowdTask(task, cookie);
+        if (result.isSuccess) {
+          count++;
+        }
 
-      if (result.isSuccess) {
-        count++;
+        $.log('等候 5 秒');
+        await $.wait(5000);
       }
-
-      $.log('等候 5 秒');
-      await $.wait(5000);
-    }
-    else if (task.task_event_type == 'interactive.follow.user') {
-      const result = await doFollowTask(task, cookie);
-
-      if (result.isSuccess) {
-        count++;
-      }
-
-      $.log('等候 5 秒');
-      await $.wait(5000);
     }
   }
 
