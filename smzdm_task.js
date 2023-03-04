@@ -6,7 +6,6 @@ cron: 20 14 * * *
 */
 
 const crypto = require('crypto');
-
 const Env = require('./env');
 const notify = require('./sendNotify');
 
@@ -17,21 +16,6 @@ const DEFAULT_WEB_USER_AGENT = `Mozilla/5.0 (Linux; Android 7.1.1;) AppleWebKit/
 const FOLLOW_USERS = [5874442461, 3050600933, 7466566467, 3028144837, 4573019331, 6375174216, 7987627594, 9730899715, 5034569705, 6470041157];
 
 const $ = new Env('什么值得买任务');
-
-let cookiesArr = [];
-
-// 判断环境变量里面是否有 cookie
-if (process.env.SMZDM_COOKIE) {
-  if (process.env.SMZDM_COOKIE.indexOf('&') > -1) {
-    cookiesArr = process.env.SMZDM_COOKIE.split('&');
-  }
-  else if (process.env.SMZDM_COOKIE.indexOf('\n') > -1) {
-    cookiesArr = process.env.SMZDM_COOKIE.split('\n');
-  }
-  else {
-    cookiesArr = [process.env.SMZDM_COOKIE];
-  }
-}
 
 const randomStr = (len = 18) => {
   const char = '0123456789';
@@ -710,32 +694,51 @@ class SmzdmBot {
 }
 
 !(async () => {
-  if (!cookiesArr[0]) {
+  let cookies = [];
+
+  // 判断环境变量里面是否有 cookie
+  if (process.env.SMZDM_COOKIE) {
+    if (process.env.SMZDM_COOKIE.indexOf('&') > -1) {
+      cookies = process.env.SMZDM_COOKIE.split('&');
+    }
+    else if (process.env.SMZDM_COOKIE.indexOf('\n') > -1) {
+      cookies = process.env.SMZDM_COOKIE.split('\n');
+    }
+    else {
+      cookies = [process.env.SMZDM_COOKIE];
+    }
+  }
+
+  if (!cookies[0]) {
     $.log('\n请先设置 SMZDM_COOKIE 环境变量');
+
     return;
   }
 
   let notifyContent = '';
 
-  for (let i = 0; i < cookiesArr.length; i++) {
-    if (cookiesArr[i]) {
-      if (i > 0) {
-        $.log('\n延迟 5 秒执行\n');
-        await $.wait(5000);
-      }
+  for (let i = 0; i < cookies.length; i++) {
+    const cookie = cookies[i];
 
-      const cookie = cookiesArr[i];
-      const sep = `\n******开始账号${i + 1}******\n`;
-
-      $.log(sep);
-
-      const bot = new SmzdmBot(cookie);
-      const msg = await bot.run();
-
-      $.log(msg + '\n');
-
-      notifyContent += sep + msg + '\n';
+    if (!cookie) {
+      continue;
     }
+
+    if (i > 0) {
+      $.log('\n延迟 5 秒执行\n');
+      await $.wait(5000);
+    }
+
+    const sep = `\n******开始账号${i + 1}******\n`;
+
+    $.log(sep);
+
+    const bot = new SmzdmBot(cookie);
+    const msg = await bot.run();
+
+    $.log(msg + '\n');
+
+    notifyContent += sep + msg + '\n';
   }
 
   await notify.sendNotify($.name, notifyContent);
