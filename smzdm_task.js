@@ -58,18 +58,20 @@ function getToken(cookie) {
 }
 
 function getHeaders(cookie, isWeb = false) {
+  const androidCookie = cookie.replace('iphone', 'android').replace('iPhone', 'Android').replace('apk_partner_name=appstore', 'apk_partner_name=android');
+
   return isWeb ? {
     Accept: '*/*',
     'Accept-Encoding': 'gzip',
     'Accept-Language': 'zh-CN,zh-Hans;q=0.9',
     'User-Agent': DEFAULT_WEB_USER_AGENT,
-    Cookie: cookie.replace('iphone', 'android').replace('iPhone', 'Android').replace('apk_partner_name=appstore', 'apk_partner_name=android')
+    Cookie: androidCookie
   } : {
     'User-Agent': process.env.SMZDM_USER_AGENT || DEFAULT_USER_AGENT,
     'Accept-Language': 'zh-Hans-CN;q=1',
     'Accept-Encoding': 'gzip',
     'request_key': randomStr(18),
-    Cookie: cookie.replace('iphone', 'android').replace('iPhone', 'Android').replace('apk_partner_name=appstore', 'apk_partner_name=android')
+    Cookie: androidCookie
   };
 }
 
