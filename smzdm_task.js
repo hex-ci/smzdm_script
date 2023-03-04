@@ -417,10 +417,10 @@ async function followUser(id, isFollow = true, cookie) {
   });
 
   if (isSuccess) {
-    $.log(`关注/取关成功: ${id}`);
+    $.log(`${isFollow ? '关注' : '取关'}成功: ${id}`);
   }
   else {
-    $.log(`关注/取关失败！${response}`);
+    $.log(`${isFollow ? '关注' : '取关'}失败！${response}`);
   }
 
   return {
