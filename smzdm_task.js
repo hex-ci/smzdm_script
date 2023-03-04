@@ -11,8 +11,9 @@ const notify = require('./sendNotify');
 
 const SIGN_KEY = 'apr1$AwP!wRRT$gJ/q.X24poeBInlUJC';
 const APP_VERSION = '10.3.0';
-const DEFAULT_USER_AGENT = `smzdm_android_V${APP_VERSION} rv:121 (Redmi Note 3;Android10;zh)smzdmapp`;
-const DEFAULT_WEB_USER_AGENT = `Mozilla/5.0 (Linux; Android 7.1.1;) AppleWebKit/537.36 (KHTML, like Gecko) Mobile/15E148/smzdm ${APP_VERSION} rv:121`;
+const APP_VERSION_REV = '800';
+const DEFAULT_USER_AGENT = `smzdm_android_V${APP_VERSION} rv:${APP_VERSION_REV} (PE-UL00;Android6.0;zh)smzdmapp`;
+const DEFAULT_WEB_USER_AGENT = `Mozilla/5.0 (Linux; Android 6.0; PE-UL00 Build/HuaweiPE-UL00; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/55.0.2883.91 Mobile Safari/537.36{ smzdm_android_V${APP_VERSION} rv:${APP_VERSION_REV} (PE-UL00;Android6.0;zh) jsbv_1.0.0 webv_2.0 smzdmapp }`;
 const FOLLOW_USERS = [5874442461, 3050600933, 7466566467, 3028144837, 4573019331, 6375174216, 7987627594, 9730899715, 5034569705, 6470041157];
 
 const $ = new Env('什么值得买任务');
