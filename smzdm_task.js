@@ -62,15 +62,16 @@ function getHeaders(cookie, isWeb = false) {
 
   return isWeb ? {
     Accept: '*/*',
-    'Accept-Encoding': 'gzip',
     'Accept-Language': 'zh-CN,zh-Hans;q=0.9',
+    'Accept-Encoding': 'gzip',
     'User-Agent': DEFAULT_WEB_USER_AGENT,
     Cookie: androidCookie
   } : {
-    'User-Agent': process.env.SMZDM_USER_AGENT || DEFAULT_USER_AGENT,
+    Accept: '*/*',
     'Accept-Language': 'zh-Hans-CN;q=1',
     'Accept-Encoding': 'gzip',
     'request_key': randomStr(18),
+    'User-Agent': process.env.SMZDM_USER_AGENT || DEFAULT_USER_AGENT,
     Cookie: androidCookie
   };
 }
