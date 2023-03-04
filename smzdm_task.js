@@ -28,8 +28,9 @@ if (process.env.SMZDM_COOKIE) {
 }
 
 const SIGN_KEY = 'apr1$AwP!wRRT$gJ/q.X24poeBInlUJC';
-const DEFAULT_USER_AGENT = 'smzdm_android_V10.2.0 rv:860 (Redmi Note 3;Android10;zh)smzdmapp';
-const DEFAULT_WEB_USER_AGENT = 'Mozilla/5.0 (Linux; Android 7.1.1;) AppleWebKit/537.36 (KHTML, like Gecko) Mobile/15E148/smzdm 10.2.0 rv:106.1';
+const APP_VERSION = '10.2.0';
+const DEFAULT_USER_AGENT = `smzdm_android_V${APP_VERSION} rv:860 (Redmi Note 3;Android10;zh)smzdmapp`;
+const DEFAULT_WEB_USER_AGENT = `Mozilla/5.0 (Linux; Android 7.1.1;) AppleWebKit/537.36 (KHTML, like Gecko) Mobile/15E148/smzdm ${APP_VERSION} rv:860`;
 const FOLLOW_USERS = [5874442461, 3050600933, 7466566467, 3028144837, 4573019331, 6375174216, 7987627594, 9730899715, 5034569705, 6470041157];
 
 function randomStr(len = 18) {
@@ -77,7 +78,7 @@ function signFormData(data) {
   const newData = {
     weixin: '1',
     f: 'android',
-    v: '10.2.0',
+    v: APP_VERSION,
     sk: '1',
     time: `${Math.round(new Date().getTime() / 1000)}000`,
     ...data
@@ -122,7 +123,7 @@ async function requestApi(url, inputOptions = {}) {
 
     return {
       isSuccess: options.parseJSON === false ? true : (data.error_code == '0'),
-      response: response.body,
+      response: JSON.stringify(data),
       data
     };
   }).catch((error) => {
@@ -604,7 +605,7 @@ async function receiveActivity(activity, cookie) {
 }
 
 async function run(cookie) {
-  const { tasks, detail } = await getTaskList(cookie);
+  const { tasks } = await getTaskList(cookie);
 
   let count = 0;
 
@@ -668,8 +669,15 @@ async function run(cookie) {
   $.log('等候 5 秒');
   await $.wait(5000);
 
-  // 尝试领取活动奖励
-  await receiveActivity(detail.cell_data, cookie);
+  // 领取活动奖励
+  const { detail } = await getTaskList(cookie);
+
+  if (detail.cell_data && detail.cell_data.activity_reward_status == '1') {
+    $.log('等候 3 秒');
+    await $.wait(5000);
+
+    await receiveActivity(detail.cell_data, cookie);
+  }
 
   return `成功完成任务数: ${count}`;
 }
