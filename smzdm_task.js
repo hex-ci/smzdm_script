@@ -9,12 +9,20 @@ const crypto = require('crypto');
 const Env = require('./env');
 const notify = require('./sendNotify');
 
-const SIGN_KEY = 'apr1$AwP!wRRT$gJ/q.X24poeBInlUJC';
+// ------------------------------------
+
+// 可关注用户列表
+const FOLLOW_USERS = [5874442461, 3050600933, 7466566467, 3028144837, 4573019331, 6375174216, 7987627594, 9730899715, 5034569705, 6470041157];
+
 const APP_VERSION = '10.3.0';
 const APP_VERSION_REV = '800';
+
 const DEFAULT_USER_AGENT = `smzdm_android_V${APP_VERSION} rv:${APP_VERSION_REV} (Redmi Note 3;Android10.0;zh)smzdmapp`;
 const DEFAULT_WEB_USER_AGENT = `Mozilla/5.0 (Linux; Android 10.0; Redmi Build/Redmi Note 3; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/95.0.4638.74 Mobile Safari/537.36{ smzdm_android_V${APP_VERSION} rv:${APP_VERSION_REV} (Redmi;Android10.0;zh) jsbv_1.0.0 webv_2.0 smzdmapp }`;
-const FOLLOW_USERS = [5874442461, 3050600933, 7466566467, 3028144837, 4573019331, 6375174216, 7987627594, 9730899715, 5034569705, 6470041157];
+
+const SIGN_KEY = 'apr1$AwP!wRRT$gJ/q.X24poeBInlUJC';
+
+// ------------------------------------
 
 const $ = new Env('什么值得买任务');
 
@@ -46,7 +54,6 @@ const signFormData = (data) => {
     weixin: '1',
     f: 'android',
     v: APP_VERSION,
-    sk: '1',
     time: `${Math.round(new Date().getTime() / 1000)}000`,
     ...data
   };
@@ -644,14 +651,7 @@ class SmzdmBot {
   async getTaskList() {
     const { isSuccess, data } = await requestApi('https://user-api.smzdm.com/task/list_new', {
       method: 'post',
-      headers: this.getHeaders(),
-      data: {
-        token: this.getToken(),
-        get_total: '1',
-        limit: '100',
-        offset: '0',
-        point_type: '0'
-      }
+      headers: this.getHeaders()
     });
 
     if (isSuccess) {
