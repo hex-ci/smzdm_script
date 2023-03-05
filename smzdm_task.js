@@ -78,6 +78,8 @@ const requestApi = async (url, inputOptions = {}) => {
     options.data = {};
   }
 
+  Object.keys(options.data).forEach(key => options.data[key] === undefined && delete options.data[key]);
+
   if (options.sign !== false) {
     options.data = signFormData(options.data);
   }
