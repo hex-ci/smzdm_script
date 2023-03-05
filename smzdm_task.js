@@ -11,9 +11,6 @@ const notify = require('./sendNotify');
 
 // ------------------------------------
 
-// 可关注用户列表
-const FOLLOW_USERS = [5874442461, 3050600933, 7466566467, 3028144837, 4573019331, 6375174216, 7987627594, 9730899715, 5034569705, 6470041157];
-
 const APP_VERSION = '10.4.26';
 const APP_VERSION_REV = '866';
 
@@ -51,8 +48,8 @@ const removeTags = (str) => str.replace(/<[^<]+?>/g, '');
 // 添加公共参数并签名数据
 const signFormData = (data) => {
   const newData = {
-    weixin: '1',
-    basic_v: '0',
+    weixin: 1,
+    basic_v: 0,
     f: 'android',
     v: APP_VERSION,
     time: `${Math.round(new Date().getTime() / 1000)}000`,
@@ -158,6 +155,7 @@ class SmzdmBot {
       }
       // 未完成任务
       else if (task.task_status == '2') {
+        // 浏览文章任务
         if (task.task_event_type == 'interactive.view.article') {
           const result = await this.doViewTask(task);
 
@@ -168,6 +166,7 @@ class SmzdmBot {
           $.log('等候 5 秒');
           await $.wait(5000);
         }
+        // 分享任务
         else if (task.task_event_type == 'interactive.share') {
           let result;
 
@@ -185,6 +184,7 @@ class SmzdmBot {
           $.log('等候 5 秒');
           await $.wait(5000);
         }
+        // 抽奖任务
         else if (task.task_event_type == 'guide.crowd') {
           const result = await this.doCrowdTask(task);
 
@@ -195,6 +195,7 @@ class SmzdmBot {
           $.log('等候 5 秒');
           await $.wait(5000);
         }
+        // 关注用户任务
         else if (task.task_event_type == 'interactive.follow.user') {
           const result = await this.doFollowUserTask(task);
 
@@ -205,6 +206,7 @@ class SmzdmBot {
           $.log('等候 5 秒');
           await $.wait(5000);
         }
+        // 关注专栏任务
         else if (task.task_event_type == 'interactive.follow.tag') {
           const result = await this.doFollowTagTask(task);
 
@@ -263,38 +265,50 @@ class SmzdmBot {
     }
   }
 
-  // 执行关注用户任务（先取关，再关注，执行三次，最后取关）
+  // 执行关注用户任务
   async doFollowUserTask(task) {
     $.log(`开始任务: ${task.task_name}`);
 
-    // 随机选一个用户操作
-    const userId = FOLLOW_USERS[Math.floor(Math.random() * FOLLOW_USERS.length)];
+    // 随机选一个用户
+    const user = await this.getUserByRandom();
 
-    $.log('先尝试取关用户，如果出错表示尚未关注此用户，忽略这个错误。');
-    await this.follow({
-      method: 'destroy',
-      type: 'user',
-      keyword: userId
-    });
+    if (!user) {
+      return {
+        isSuccess: false
+      };
+    }
 
     $.log('等候 3 秒');
     await $.wait(3000);
 
     for (let i = 0; i < 3; i++) {
+      if (user.is_follow == '1') {
+        await this.follow({
+          method: 'destroy',
+          type: 'user',
+          keyword: user.keyword
+        });
+
+        $.log('等候 5 秒');
+        await $.wait(3000);
+      }
+
       await this.follow({
         method: 'create',
         type: 'user',
-        keyword: userId
+        keyword: user.keyword
       });
 
       $.log('等候 3 秒');
       await $.wait(3000);
 
-      await this.follow({
-        method: 'destroy',
-        type: 'user',
-        keyword: userId
-      });
+      if (user.is_follow == '0') {
+        await this.follow({
+          method: 'destroy',
+          type: 'user',
+          keyword: user.keyword
+        });
+      }
 
       $.log('等候 5 秒');
       await $.wait(3000);
@@ -498,6 +512,29 @@ class SmzdmBot {
     };
   }
 
+  // 随机获取用户
+  async getUserByRandom() {
+    const { isSuccess, data, response } = await requestApi('https://dingyue-api.smzdm.com/tuijian/search_result', {
+      method: 'post',
+      headers: this.getHeaders(),
+      data: {
+        nav_id: 0,
+        page: 1,
+        type: 'user',
+        time_code: ''
+      }
+    });
+
+    if (isSuccess) {
+      return data.data.rows[Math.floor(Math.random() * data.data.rows.length)];
+    }
+    else {
+      $.log(`获取用户列表失败！${response}`);
+
+      return false;
+    }
+  }
+
   // 参加抽奖
   async joinCrowd(id) {
     const { isSuccess, data, response } = await requestApi('https://zhiyou.m.smzdm.com/user/crowd/ajax_participate', {
@@ -514,7 +551,7 @@ class SmzdmBot {
         client_type: 'android',
         sourceRoot: '个人中心',
         sourceMode: '幸运屋抽奖',
-        price_id: '1'
+        price_id: 1
       }
     });
 
