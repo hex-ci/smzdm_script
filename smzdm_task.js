@@ -206,7 +206,7 @@ class SmzdmBot {
           $.log('等候 5 秒');
           await $.wait(5000);
         }
-        // 关注专栏任务
+        // 关注栏目任务
         else if (task.task_event_type == 'interactive.follow.tag') {
           const result = await this.doFollowTagTask(task);
 
