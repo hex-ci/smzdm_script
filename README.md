@@ -5,10 +5,11 @@
 * 每日签到
 * 每日抽奖
 * 每日任务(Beta)
-  * 文章浏览
+  * 浏览文章
   * 分享
   * 免费抽奖
   * 关注用户
+  * 关注栏目
   * 限时活动奖励
 
 ## 使用方法
@@ -24,8 +25,6 @@ ql repo https://github.com/hex-ci/smzdm_script.git "" "env.js" "env.js"
 ### 抓包
 
 尽量使用 Android 手机抓包 `https://user-api.smzdm.com/checkin` 链接，把 cookie 取出来放到青龙面板的 SMZDM_COOKIE 环境变量中，多用户请添加多个同名环境变量即可。
-
-建议使用自己 Android 手机的 user agent，可以添加 SMZDM_USER_AGENT 环境变量，否则使用脚本默认 user agent。
 
 ## 注意事项
 

@@ -14,8 +14,8 @@ const notify = require('./sendNotify');
 // 可关注用户列表
 const FOLLOW_USERS = [5874442461, 3050600933, 7466566467, 3028144837, 4573019331, 6375174216, 7987627594, 9730899715, 5034569705, 6470041157];
 
-const APP_VERSION = '10.3.0';
-const APP_VERSION_REV = '800';
+const APP_VERSION = '10.4.26';
+const APP_VERSION_REV = '866';
 
 const DEFAULT_USER_AGENT = `smzdm_android_V${APP_VERSION} rv:${APP_VERSION_REV} (Redmi Note 3;Android10.0;zh)smzdmapp`;
 const DEFAULT_WEB_USER_AGENT = `Mozilla/5.0 (Linux; Android 10.0; Redmi Build/Redmi Note 3; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/95.0.4638.74 Mobile Safari/537.36{ smzdm_android_V${APP_VERSION} rv:${APP_VERSION_REV} (Redmi;Android10.0;zh) jsbv_1.0.0 webv_2.0 smzdmapp }`;
@@ -52,13 +52,14 @@ const removeTags = (str) => str.replace(/<[^<]+?>/g, '');
 const signFormData = (data) => {
   const newData = {
     weixin: '1',
+    basic_v: '0',
     f: 'android',
     v: APP_VERSION,
     time: `${Math.round(new Date().getTime() / 1000)}000`,
     ...data
   };
 
-  const keys = Object.keys(newData).sort();
+  const keys = Object.keys(newData).filter(key => newData[key] !== '').sort();
   const signData = keys.map(key => `${key}=${newData[key]}`).join('&');
   const sign = crypto.createHash('md5').update(`${signData}&key=${SIGN_KEY}`).digest('hex').toUpperCase();
 
@@ -87,7 +88,8 @@ const requestApi = async (url, inputOptions = {}) => {
   return $.http[options.method]({
     url,
     headers: options.headers,
-    form: options.method === 'post' ? options.data : undefined
+    form: options.method === 'post' ? options.data : undefined,
+    searchParams: options.method === 'get' ? options.data : undefined,
   }).then((response) => {
     const data = options.parseJSON === false ? response.body : parseJSON(response.body);
 
@@ -105,11 +107,33 @@ const requestApi = async (url, inputOptions = {}) => {
   })
 };
 
+const updateCookie = (cookie, name, value) => {
+  const re = new RegExp(`(^|;)${name}=[^;]+;`, 'ig');
+
+  return cookie.replace(re, `$1${name}=${encodeURIComponent(value)};`);
+};
+
 // ------------------------------------
 
 class SmzdmBot {
   constructor(cookie) {
     this.cookie = cookie;
+
+    const match = this.cookie.match(/sess=(.*?);/);
+    this.token = match ? match[1] : '';
+
+    // 处理 cookie
+    this.androidCookie = this.cookie.replace('iphone', 'android').replace('iPhone', 'Android');
+    this.androidCookie = updateCookie(this.androidCookie, 'smzdm_version', APP_VERSION);
+    this.androidCookie = updateCookie(this.androidCookie, 'device_smzdm_version', APP_VERSION);
+    this.androidCookie = updateCookie(this.androidCookie, 'v', APP_VERSION);
+    this.androidCookie = updateCookie(this.androidCookie, 'device_smzdm_version_code', APP_VERSION_REV);
+    this.androidCookie = updateCookie(this.androidCookie, 'device_system_version', '10.0');
+    this.androidCookie = updateCookie(this.androidCookie, 'apk_partner_name', 'smzdm_download');
+    this.androidCookie = updateCookie(this.androidCookie, 'partner_name', 'smzdm_download');
+    this.androidCookie = updateCookie(this.androidCookie, 'device_type', 'Android');
+    this.androidCookie = updateCookie(this.androidCookie, 'device_smzdm', 'android');
+    this.androidCookie = updateCookie(this.androidCookie, 'device_name', 'Android');
   }
 
   // 主函数
@@ -172,7 +196,17 @@ class SmzdmBot {
           await $.wait(5000);
         }
         else if (task.task_event_type == 'interactive.follow.user') {
-          const result = await this.doFollowTask(task);
+          const result = await this.doFollowUserTask(task);
+
+          if (result.isSuccess) {
+            count++;
+          }
+
+          $.log('等候 5 秒');
+          await $.wait(5000);
+        }
+        else if (task.task_event_type == 'interactive.follow.tag') {
+          const result = await this.doFollowTagTask(task);
 
           if (result.isSuccess) {
             count++;
@@ -208,7 +242,7 @@ class SmzdmBot {
       method: 'post',
       headers: this.getHeaders(),
       data: {
-        token: this.getToken(),
+        token: this.token,
         activity_id: activity.activity_id
       }
     });
@@ -229,30 +263,91 @@ class SmzdmBot {
     }
   }
 
-  // 执行关注任务（先取关，再关注，执行三次，最后取关）
-  async doFollowTask(task) {
+  // 执行关注用户任务（先取关，再关注，执行三次，最后取关）
+  async doFollowUserTask(task) {
     $.log(`开始任务: ${task.task_name}`);
 
     // 随机选一个用户操作
     const userId = FOLLOW_USERS[Math.floor(Math.random() * FOLLOW_USERS.length)];
 
-    $.log('先尝试取关用户，如果出错表示尚未关注此用户，忽略这个错误即可。');
-    await this.followUser(userId, false);
+    $.log('先尝试取关用户，如果出错表示尚未关注此用户，忽略这个错误。');
+    await this.follow({
+      method: 'destroy',
+      type: 'user',
+      keyword: userId
+    });
 
     $.log('等候 3 秒');
     await $.wait(3000);
 
     for (let i = 0; i < 3; i++) {
-      await this.followUser(userId, true);
+      await this.follow({
+        method: 'create',
+        type: 'user',
+        keyword: userId
+      });
 
       $.log('等候 3 秒');
       await $.wait(3000);
 
-      await this.followUser(userId, false);
+      await this.follow({
+        method: 'destroy',
+        type: 'user',
+        keyword: userId
+      });
 
       $.log('等候 5 秒');
       await $.wait(3000);
     }
+
+    $.log('延迟 5 秒领取奖励');
+    await $.wait(5000);
+
+    return await this.receiveReward(task.task_id);
+  }
+
+  // 执行关注栏目任务（先取关，再关注，最后取关）
+  async doFollowTagTask(task) {
+    $.log(`开始任务: ${task.task_name}`);
+
+    // 获取栏目信息
+    const tagDetail = await this.getTagDetail(task.task_redirect_url.link_val);
+
+    if (!tagDetail.lanmu_id) {
+      $.log('获取栏目信息失败！');
+
+      return {
+        isSuccess: false
+      };
+    }
+
+    $.log('先尝试取关栏目，如果出错表示尚未关注此，忽略这个错误。');
+    await this.follow({
+      method: 'destroy',
+      type: 'tag',
+      keywordId: tagDetail.lanmu_id,
+      keyword: tagDetail.lanmu_info.lanmu_name
+    });
+
+    $.log('等候 3 秒');
+    await $.wait(3000);
+
+    await this.follow({
+      method: 'create',
+      type: 'tag',
+      keywordId: tagDetail.lanmu_id,
+      keyword: tagDetail.lanmu_info.lanmu_name
+    });
+
+    $.log('等候 3 秒');
+    await $.wait(3000);
+
+    await this.follow({
+      method: 'destroy',
+      type: 'tag',
+      keywordId: tagDetail.lanmu_id,
+      keyword: tagDetail.lanmu_info.lanmu_name
+    });
 
     $.log('延迟 5 秒领取奖励');
     await $.wait(5000);
@@ -355,7 +450,7 @@ class SmzdmBot {
       method: 'post',
       headers: this.getHeaders(),
       data: {
-        token: this.getToken(),
+        token: this.token,
         article_id: task.article_id,
         channel_id: task.channel_id
       }
@@ -376,39 +471,25 @@ class SmzdmBot {
     }
   }
 
-  // 关注/取关用户
-  async followUser(id, isFollow = true) {
-    const { isSuccess, response } = await requestApi('https://zhiyou.smzdm.com/guanzhu/ajax_follow', {
+  // 关注/取关
+  async follow({keywordId, keyword, type, method}) {
+    const { isSuccess, response } = await requestApi(`https://dingyue-api.smzdm.com/dingyue/${method}`, {
       method: 'post',
-      sign: false,
-      headers: {
-        ...this.getHeaders(true),
-        Origin: 'https://post.smzdm.com',
-        Referer: `https://post.smzdm.com/`
-      },
+      headers: this.getHeaders(),
       data: {
-        follow: isFollow ? 1 : 0,
-        type: 'user',
-        keyword: id,
-        source: '无',
-        operationalpositionID: '无',
-        aid: '无',
-        cid: '无',
-        atp: '无',
-        tagID: '无',
-        p: '1',
-        is_detail: '0',
-        sourcePage: 'https://post.smzdm.com/',
-        sourceMode: '无',
-        client_type: 'android'
+        touchstone_event: '{}',
+        refer: '',
+        keyword_id: keywordId,
+        keyword,
+        type
       }
     });
 
     if (isSuccess) {
-      $.log(`${isFollow ? '关注' : '取关'}成功: ${id}`);
+      $.log(`${method} 关注成功: ${keyword}`);
     }
     else {
-      $.log(`${isFollow ? '关注' : '取关'}失败！${response}`);
+      $.log(`${method} 关注失败！${response}`);
     }
 
     return {
@@ -503,7 +584,7 @@ class SmzdmBot {
       method: 'post',
       headers: this.getHeaders(),
       data: {
-        token: this.getToken(),
+        token: this.oken(),
         article_id: articleId,
         channel_id: channelId
       }
@@ -533,7 +614,7 @@ class SmzdmBot {
       method: 'post',
       headers: this.getHeaders(),
       data: {
-        token: this.getToken(),
+        token: this.token,
         article_id: articleId,
         channel_id: channelId
       }
@@ -563,7 +644,7 @@ class SmzdmBot {
       method: 'post',
       headers: this.getHeaders(),
       data: {
-        token: this.getToken(),
+        token: this.token,
         channel_id: channelId
       }
     });
@@ -622,7 +703,7 @@ class SmzdmBot {
       method: 'post',
       headers: this.getHeaders(),
       data: {
-        token: this.getToken(),
+        token: this.token,
         task_id: taskId
       }
     });
@@ -649,14 +730,20 @@ class SmzdmBot {
 
   // 获取任务列表
   async getTaskList() {
-    const { isSuccess, data } = await requestApi('https://user-api.smzdm.com/task/list_new', {
+    const { isSuccess, data } = await requestApi('https://user-api.smzdm.com/task/list_v2', {
       method: 'post',
       headers: this.getHeaders()
     });
 
     if (isSuccess) {
+      let tasks = [];
+
+      data.data.rows[0].cell_data.activity_task.accumulate_list.task_list_v2.forEach(item => {
+        tasks = tasks.concat(item.task_list);
+      });
+
       return {
-        tasks: data.data.rows[0].cell_data.activity_task.accumulate_list.task_list,
+        tasks: tasks,
         detail: data.data.rows[0]
       };
     }
@@ -668,28 +755,40 @@ class SmzdmBot {
     }
   }
 
-  getToken() {
-    const match = this.cookie.match(/sess=(.*?);/);
+  // 获取栏目信息
+  async getTagDetail(id) {
+    const { isSuccess, data, response } = await requestApi('https://common-api.smzdm.com/lanmu/config_data', {
+      headers: this.getHeaders(),
+      data: {
+        middle_page: '',
+        tab_selects: '',
+        redirect_params: id
+      }
+    });
 
-    return match ? match[1] : '';
+    if (isSuccess) {
+      return data.data;
+    }
+    else {
+      $.log(`获取栏目信息失败！${response}`);
+      return {};
+    }
   }
 
   getHeaders(isWeb = false) {
-    const androidCookie = this.cookie.replace('iphone', 'android').replace('iPhone', 'Android').replace('apk_partner_name=appstore', 'apk_partner_name=android');
-
     return isWeb ? {
       Accept: '*/*',
       'Accept-Language': 'zh-CN,zh-Hans;q=0.9',
       'Accept-Encoding': 'gzip',
       'User-Agent': DEFAULT_WEB_USER_AGENT,
-      Cookie: androidCookie
+      Cookie: this.androidCookie
     } : {
       Accept: '*/*',
       'Accept-Language': 'zh-Hans-CN;q=1',
       'Accept-Encoding': 'gzip',
       'request_key': randomStr(18),
-      'User-Agent': process.env.SMZDM_USER_AGENT || DEFAULT_USER_AGENT,
-      Cookie: androidCookie
+      'User-Agent': DEFAULT_USER_AGENT,
+      Cookie: this.androidCookie
     };
   }
 }
