@@ -135,6 +135,23 @@ class SmzdmBot {
     this.androidCookie = updateCookie(this.androidCookie, 'device_name', 'Android');
   }
 
+  getHeaders(isWeb = false) {
+    return isWeb ? {
+      Accept: '*/*',
+      'Accept-Language': 'zh-CN,zh-Hans;q=0.9',
+      'Accept-Encoding': 'gzip',
+      'User-Agent': DEFAULT_WEB_USER_AGENT,
+      Cookie: this.androidCookie
+    } : {
+      Accept: '*/*',
+      'Accept-Language': 'zh-Hans-CN;q=1',
+      'Accept-Encoding': 'gzip',
+      'request_key': randomStr(18),
+      'User-Agent': DEFAULT_USER_AGENT,
+      Cookie: this.androidCookie
+    };
+  }
+
   // 主函数
   async run() {
     const { tasks } = await this.getTaskList();
@@ -812,23 +829,6 @@ class SmzdmBot {
       $.log(`获取栏目信息失败！${response}`);
       return {};
     }
-  }
-
-  getHeaders(isWeb = false) {
-    return isWeb ? {
-      Accept: '*/*',
-      'Accept-Language': 'zh-CN,zh-Hans;q=0.9',
-      'Accept-Encoding': 'gzip',
-      'User-Agent': DEFAULT_WEB_USER_AGENT,
-      Cookie: this.androidCookie
-    } : {
-      Accept: '*/*',
-      'Accept-Language': 'zh-Hans-CN;q=1',
-      'Accept-Encoding': 'gzip',
-      'request_key': randomStr(18),
-      'User-Agent': DEFAULT_USER_AGENT,
-      Cookie: this.androidCookie
-    };
   }
 }
 
