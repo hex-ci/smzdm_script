@@ -87,7 +87,7 @@ class SmzdmCheckinBot extends SmzdmBot {
     const isContinue = await this.isContinueCheckin();
 
     if (!isContinue) {
-      $.log('今天没有额外奖励');
+      $.log('今天没有额外奖励\n');
 
       return false;
     }
