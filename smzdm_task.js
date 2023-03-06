@@ -623,7 +623,7 @@ class SmzdmBot {
       method: 'post',
       headers: this.getHeaders(),
       data: {
-        token: this.oken(),
+        token: this.token,
         article_id: articleId,
         channel_id: channelId
       }
