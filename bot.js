@@ -7,7 +7,7 @@ const APP_VERSION = '10.4.26';
 const APP_VERSION_REV = '866';
 
 const DEFAULT_USER_AGENT = `smzdm_android_V${APP_VERSION} rv:${APP_VERSION_REV} (Redmi Note 3;Android10.0;zh)smzdmapp`;
-const DEFAULT_WEB_USER_AGENT = `Mozilla/5.0 (Linux; Android 10.0; Redmi Build/Redmi Note 3; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/95.0.4638.74 Mobile Safari/537.36{ smzdm_android_V${APP_VERSION} rv:${APP_VERSION_REV} (Redmi;Android10.0;zh) jsbv_1.0.0 webv_2.0 smzdmapp }`;
+const DEFAULT_WEB_USER_AGENT = `Mozilla/5.0 (Linux; Android 10.0; Redmi Build/Redmi Note 3; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/95.0.4638.74 Mobile Safari/537.36 smzdm_android_V${APP_VERSION} rv:${APP_VERSION_REV} (Redmi;Android10.0;zh) jsbv_1.0.0 webv_2.0 smzdmapp`;
 
 const SIGN_KEY = 'apr1$AwP!wRRT$gJ/q.X24poeBInlUJC';
 
@@ -157,5 +157,6 @@ class SmzdmBot {
 module.exports = {
   SmzdmBot,
   requestApi,
-  removeTags
+  removeTags,
+  parseJSON
 };
