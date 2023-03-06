@@ -1,4 +1,4 @@
-module.exports = function Env(t, e) {
+function Env(t, e) {
   "undefined" != typeof process && JSON.stringify(process.env).indexOf("GITHUB") > -1 && process.exit(0);
 
   class s {
@@ -389,3 +389,5 @@ module.exports = function Env(t, e) {
     }
   }(t, e);
 }
+
+module.exports = Env;
