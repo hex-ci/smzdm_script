@@ -41,15 +41,19 @@ class SmzdmCheckinBot extends SmzdmBot {
     });
 
     if (isSuccess) {
-      return {
-        isSuccess,
-        msg: `⭐签到成功${data.data.daily_num}天
+      const msg = `⭐签到成功${data.data.daily_num}天
 🏅金币: ${data.data.cgold}
 🏅碎银: ${data.data.pre_re_silver}
 🏅积分: ${data.data.cpoints}
 🏅经验: ${data.data.cexperience}
 🏅等级: ${data.data.rank}
-🏅补签卡: ${data.data.cards}`
+🏅补签卡: ${data.data.cards}`;
+
+      $.log(`${msg}\n`);
+
+      return {
+        isSuccess,
+        msg
       };
     }
     else {
@@ -164,14 +168,12 @@ class SmzdmCheckinBot extends SmzdmBot {
       await $.wait(5000);
     }
 
-    const sep = `\n******开始账号${i + 1}******\n`;
+    const sep = `\n******账号${i + 1}******\n`;
 
     $.log(sep);
 
     const bot = new SmzdmCheckinBot(cookie);
     const msg = await bot.run();
-
-    $.log(msg + '\n');
 
     notifyContent += sep + msg + '\n';
   }
