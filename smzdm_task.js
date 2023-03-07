@@ -95,22 +95,22 @@ class SmzdmTaskBot extends SmzdmBot {
       }
     }
 
-    $.log('等候 5 秒查看是否有限时活动奖励');
+    $.log('等候 5 秒查询是否有限时累计活动阶段奖励');
     await $.wait(5000);
 
     // 领取活动奖励
     const { detail } = await this.getTaskList();
 
     if (detail.cell_data && detail.cell_data.activity_reward_status == '1') {
-      $.log('有限时活动奖励，等候 3 秒领取奖励');
+      $.log('有奖励，等候 3 秒领取奖励');
       await $.wait(5000);
 
       const { isSuccess } = await this.receiveActivity(detail.cell_data);
 
-      notifyMsg += `限时活动奖励领取${isSuccess ? '成功' : '失败！请查看日志'}\n`;
+      notifyMsg += `奖励领取${isSuccess ? '成功' : '失败！请查看日志'}\n`;
     }
     else {
-      $.log('无限时活动奖励');
+      $.log('无奖励');
     }
 
     return notifyMsg || '无可执行任务';
