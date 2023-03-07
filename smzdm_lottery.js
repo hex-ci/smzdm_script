@@ -2,7 +2,7 @@
 什么值得买抽奖脚本
 项目地址: https://github.com/hex-ci/smzdm_script
 
-cron: 10 8 * * *
+cron: 20 8 * * *
 */
 
 const Env = require('./env');
