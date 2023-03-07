@@ -27,11 +27,12 @@ class SmzdmLotteryBot extends SmzdmBot {
       };
     }
 
-    const { isSuccess, data, response } = await requestApi('https://zhiyou.smzdm.com/user/lottery/jsonp_get_current', {
+    const { isSuccess, data, response } = await requestApi('https://zhiyou.smzdm.com/user/lottery/jsonp_draw', {
       sign: false,
       parseJSON: false,
       headers: {
         ...this.getHeadersForWeb(),
+        'x-requested-with': 'com.smzdm.client.android',
         Referer: 'https://m.smzdm.com/'
       },
       data: {
