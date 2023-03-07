@@ -6,7 +6,7 @@ cron: 10 8 * * *
 */
 
 const Env = require('./env');
-const { SmzdmBot, requestApi, removeTags } = require('./bot');
+const { SmzdmBot, requestApi, removeTags, getEnvCookies } = require('./bot');
 const notify = require('./sendNotify');
 
 // ------------------------------------
@@ -133,22 +133,9 @@ class SmzdmCheckinBot extends SmzdmBot {
 }
 
 !(async () => {
-  let cookies = [];
+  const cookies = getEnvCookies();
 
-  // 判断环境变量里面是否有 cookie
-  if (process.env.SMZDM_COOKIE) {
-    if (process.env.SMZDM_COOKIE.indexOf('&') > -1) {
-      cookies = process.env.SMZDM_COOKIE.split('&');
-    }
-    else if (process.env.SMZDM_COOKIE.indexOf('\n') > -1) {
-      cookies = process.env.SMZDM_COOKIE.split('\n');
-    }
-    else {
-      cookies = [process.env.SMZDM_COOKIE];
-    }
-  }
-
-  if (!cookies[0]) {
+  if (cookies === false) {
     $.log('\n请先设置 SMZDM_COOKIE 环境变量');
 
     return;

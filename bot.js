@@ -109,6 +109,25 @@ const updateCookie = (cookie, name, value) => {
   return cookie.replace(re, `$1${name}=${encodeURIComponent(value)};`);
 };
 
+const getEnvCookies = () => {
+  let cookies = [];
+
+  // 判断环境变量里面是否有 cookie
+  if (process.env.SMZDM_COOKIE) {
+    if (process.env.SMZDM_COOKIE.indexOf('&') > -1) {
+      cookies = process.env.SMZDM_COOKIE.split('&');
+    }
+    else if (process.env.SMZDM_COOKIE.indexOf('\n') > -1) {
+      cookies = process.env.SMZDM_COOKIE.split('\n');
+    }
+    else {
+      cookies = [process.env.SMZDM_COOKIE];
+    }
+  }
+
+  return cookies[0] ? cookies : false;
+};
+
 // ------------------------------------
 
 class SmzdmBot {
@@ -158,5 +177,6 @@ module.exports = {
   SmzdmBot,
   requestApi,
   removeTags,
-  parseJSON
+  parseJSON,
+  getEnvCookies
 };
