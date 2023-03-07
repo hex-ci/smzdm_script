@@ -20,7 +20,7 @@
 ql repo https://github.com/hex-ci/smzdm_script.git "" "env.js|bot.js" "env.js|bot.js"
 ```
 
-建议自行更改任务执行时间
+建议自行更改青龙面板的脚本执行时间
 
 ### 抓包
 
