@@ -155,7 +155,7 @@ class SmzdmCheckinBot extends SmzdmBot {
       await $.wait(5000);
     }
 
-    const sep = `\n******账号${i + 1}******\n`;
+    const sep = `\n****** 账号${i + 1} ******\n`;
 
     $.log(sep);
 

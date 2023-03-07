@@ -22,18 +22,18 @@ class SmzdmTaskBot extends SmzdmBot {
   async run() {
     const { tasks } = await this.getTaskList();
 
-    let count = 0;
+    let notifyMsg = '';
 
     for (let i = 0; i < tasks.length; i++) {
       const task = tasks[i];
 
       // 待领取任务
       if (task.task_status == '3') {
+        $.log(`领取[${task.task_name}]奖励:`);
+
         const { isSuccess } = await this.receiveReward(task.task_id);
 
-        if (isSuccess) {
-          count++;
-        }
+        notifyMsg += `领取[${task.task_name}]奖励${isSuccess ? '成功' : '失败！请查看日志'}\n`;
 
         $.log('等候 5 秒');
         await $.wait(5000);
@@ -42,11 +42,9 @@ class SmzdmTaskBot extends SmzdmBot {
       else if (task.task_status == '2') {
         // 浏览文章任务
         if (task.task_event_type == 'interactive.view.article') {
-          const result = await this.doViewTask(task);
+          const { isSuccess } = await this.doViewTask(task);
 
-          if (result.isSuccess) {
-            count++;
-          }
+          notifyMsg += `完成[${task.task_name}]任务${isSuccess ? '成功' : '失败！请查看日志'}\n`;
 
           $.log('等候 5 秒');
           await $.wait(5000);
@@ -62,42 +60,34 @@ class SmzdmTaskBot extends SmzdmBot {
             result = await this.doShareTaskSingle(task);
           }
 
-          if (result.isSuccess) {
-            count++;
-          }
+          notifyMsg += `完成[${task.task_name}]任务${result.isSuccess ? '成功' : '失败！请查看日志'}\n`;
 
           $.log('等候 5 秒');
           await $.wait(5000);
         }
         // 抽奖任务
         else if (task.task_event_type == 'guide.crowd') {
-          const result = await this.doCrowdTask(task);
+          const { isSuccess } = await this.doCrowdTask(task);
 
-          if (result.isSuccess) {
-            count++;
-          }
+          notifyMsg += `完成[${task.task_name}]任务${isSuccess ? '成功' : '失败！请查看日志'}\n`;
 
           $.log('等候 5 秒');
           await $.wait(5000);
         }
         // 关注用户任务
         else if (task.task_event_type == 'interactive.follow.user') {
-          const result = await this.doFollowUserTask(task);
+          const { isSuccess } = await this.doFollowUserTask(task);
 
-          if (result.isSuccess) {
-            count++;
-          }
+          notifyMsg += `完成[${task.task_name}]任务${isSuccess ? '成功' : '失败！请查看日志'}\n`;
 
           $.log('等候 5 秒');
           await $.wait(5000);
         }
         // 关注栏目任务
         else if (task.task_event_type == 'interactive.follow.tag') {
-          const result = await this.doFollowTagTask(task);
+          const { isSuccess } = await this.doFollowTagTask(task);
 
-          if (result.isSuccess) {
-            count++;
-          }
+          notifyMsg += `完成[${task.task_name}]任务${isSuccess ? '成功' : '失败！请查看日志'}\n`;
 
           $.log('等候 5 秒');
           await $.wait(5000);
@@ -105,49 +95,25 @@ class SmzdmTaskBot extends SmzdmBot {
       }
     }
 
-    $.log('等候 5 秒查看是否有活动奖励');
+    $.log('等候 5 秒查看是否有限时活动奖励');
     await $.wait(5000);
 
     // 领取活动奖励
     const { detail } = await this.getTaskList();
 
     if (detail.cell_data && detail.cell_data.activity_reward_status == '1') {
-      $.log('等候 3 秒领取活动奖励');
+      $.log('有限时活动奖励，等候 3 秒领取奖励');
       await $.wait(5000);
 
-      await this.receiveActivity(detail.cell_data);
-    }
+      const { isSuccess } = await this.receiveActivity(detail.cell_data);
 
-    return `成功完成任务数: ${count}`;
-  }
-
-  // 领取活动奖励
-  async receiveActivity(activity) {
-    $.log(`领取活动奖励: ${activity.activity_name}`);
-
-    const { isSuccess, data, response } = await requestApi('https://user-api.smzdm.com/task/activity_receive', {
-      method: 'post',
-      headers: this.getHeaders(),
-      data: {
-        token: this.token,
-        activity_id: activity.activity_id
-      }
-    });
-
-    if (isSuccess) {
-      $.log(removeTags(data.data.reward_msg));
-
-      return {
-        isSuccess
-      };
+      notifyMsg += `限时活动奖励领取${isSuccess ? '成功' : '失败！请查看日志'}\n`;
     }
     else {
-      $.log(`领取活动奖励失败！${response}`);
-
-      return {
-        isSuccess
-      };
+      $.log('无限时活动奖励');
     }
+
+    return notifyMsg || '无可执行任务';
   }
 
   // 执行关注用户任务
@@ -363,6 +329,35 @@ class SmzdmTaskBot extends SmzdmBot {
     }
     else {
       $.log(`任务异常！${response}`);
+
+      return {
+        isSuccess
+      };
+    }
+  }
+
+  // 领取活动奖励
+  async receiveActivity(activity) {
+    $.log(`领取活动奖励: ${activity.activity_name}`);
+
+    const { isSuccess, data, response } = await requestApi('https://user-api.smzdm.com/task/activity_receive', {
+      method: 'post',
+      headers: this.getHeaders(),
+      data: {
+        token: this.token,
+        activity_id: activity.activity_id
+      }
+    });
+
+    if (isSuccess) {
+      $.log(removeTags(data.data.reward_msg));
+
+      return {
+        isSuccess
+      };
+    }
+    else {
+      $.log(`领取活动奖励失败！${response}`);
 
       return {
         isSuccess
@@ -721,16 +716,14 @@ class SmzdmTaskBot extends SmzdmBot {
       await $.wait(5000);
     }
 
-    const sep = `\n******账号${i + 1}******\n`;
+    const sep = `\n****** 账号${i + 1} ******\n`;
 
     $.log(sep);
 
     const bot = new SmzdmTaskBot(cookie);
     const msg = await bot.run();
 
-    $.log(msg + '\n');
-
-    notifyContent += sep + msg + '\n';
+    notifyContent += `${sep}${msg}\n`;
   }
 
   await notify.sendNotify($.name, notifyContent);
