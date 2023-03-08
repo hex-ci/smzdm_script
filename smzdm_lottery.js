@@ -19,14 +19,30 @@ class SmzdmLotteryBot extends SmzdmBot {
   }
 
   async run() {
-    const activityId = await this.getActivityId();
+    let notifyMsg = '';
 
-    if (!activityId) {
-      return {
-        isSuccess: false
-      };
+    const lifeId = await this.getActivityIdFromLife();
+
+    if (lifeId) {
+      notifyMsg += `转盘抽奖ID: ${lifeId}\n`;
+      notifyMsg += await this.draw(lifeId);
+      notifyMsg += '\n\n';
     }
 
+    $.log('\n等候 5 秒\n');
+    await $.wait(5000);
+
+    const vipId = await this.getActivityIdFromVip();
+
+    if (vipId) {
+      notifyMsg += `转盘抽奖ID: ${vipId}\n`;
+      notifyMsg += await this.draw(vipId);
+    }
+
+    return notifyMsg;
+  }
+
+  async draw(id) {
     const { isSuccess, data, response } = await requestApi('https://zhiyou.smzdm.com/user/lottery/jsonp_draw', {
       sign: false,
       parseJSON: false,
@@ -36,7 +52,7 @@ class SmzdmLotteryBot extends SmzdmBot {
         Referer: 'https://m.smzdm.com/'
       },
       data: {
-        active_id: activityId,
+        active_id: id,
         callback: `jQuery34107538452897131465_${new Date().getTime()}`
       }
     });
@@ -48,36 +64,74 @@ class SmzdmLotteryBot extends SmzdmBot {
         const result = parseJSON(match[1]);
 
         if (result.error_code == 0 || result.error_code == 1 || result.error_code == 4) {
+          $.log(result.error_msg);
+
           return result.error_msg;
         }
         else {
-          $.log(`每日抽奖失败，接口响应异常：${response}`);
+          $.log(`转盘抽奖失败，接口响应异常：${response}`);
 
-          return '每日抽奖失败，接口响应异常';
+          return '转盘抽奖失败，接口响应异常';
         }
       }
       else {
-        $.log(`每日抽奖失败，接口响应异常: ${response}`);
+        $.log(`转盘抽奖失败，接口响应异常: ${response}`);
 
-        return '每日抽奖失败，接口响应异常';
+        return '转盘抽奖失败，接口响应异常';
       }
     }
     else {
-      $.log(`每日抽奖失败，接口响应异常: ${response}`);
+      $.log(`转盘抽奖失败，接口响应异常: ${response}`);
 
-      return '每日抽奖失败，接口响应异常';
+      return '转盘抽奖失败，接口响应异常';
     }
   }
 
-  async getActivityId() {
+  // 获取生活频道转盘抽奖ID
+  async getActivityIdFromLife() {
     const { isSuccess, data, response } = await requestApi('https://m.smzdm.com/zhuanti/life/choujiang/', {
       sign: false,
       parseJSON: false,
-      headers: this.getHeadersForWeb()
+      headers: {
+        ...this.getHeadersForWeb(),
+        'x-requested-with': 'com.smzdm.client.android'
+      }
     });
 
     if (isSuccess) {
       const match = data.match(/name\s?=\s?"lottery_activity_id"\s+value\s?=\s?"([a-zA-Z0-9]*)"/i);
+
+      if (match) {
+        $.log(`转盘抽奖ID: ${match[1]}`);
+
+        return match[1];
+      }
+      else {
+        $.log(`未找到转盘抽奖ID`);
+
+        return false;
+      }
+    }
+    else {
+      $.log(`获取转盘抽奖失败: ${response}`);
+
+      return false;
+    }
+  }
+
+  // 获取会员中心转盘抽奖ID
+  async getActivityIdFromVip() {
+    const { isSuccess, data, response } = await requestApi('https://m.smzdm.com/topic/zhyzhuanpan/cjzp/', {
+      sign: false,
+      parseJSON: false,
+      headers: {
+        ...this.getHeadersForWeb(),
+        'x-requested-with': 'com.smzdm.client.android'
+      }
+    });
+
+    if (isSuccess) {
+      const match = data.match(/\\"hashId\\":\\"([^\\]+)\\"/i);
 
       if (match) {
         $.log(`转盘抽奖ID: ${match[1]}`);
@@ -127,8 +181,6 @@ class SmzdmLotteryBot extends SmzdmBot {
 
     const bot = new SmzdmLotteryBot(cookie);
     const msg = await bot.run();
-
-    $.log(msg + '\n');
 
     notifyContent += sep + msg + '\n';
   }
