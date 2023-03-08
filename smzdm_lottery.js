@@ -191,6 +191,8 @@ class SmzdmLotteryBot extends SmzdmBot {
     notifyContent += sep + msg + '\n';
   }
 
+  $.log();
+
   await notify.sendNotify($.name, notifyContent);
 })().catch((e) => {
   $.log('', `❌ ${$.name}, 失败! 原因: ${e}!`, '')
