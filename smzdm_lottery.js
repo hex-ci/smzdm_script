@@ -24,6 +24,9 @@ class SmzdmLotteryBot extends SmzdmBot {
     const lifeId = await this.getActivityIdFromLife();
 
     if (lifeId) {
+      $.log('等候 3 秒');
+      await $.wait(3000);
+
       notifyMsg += `转盘抽奖ID: ${lifeId}\n`;
       notifyMsg += await this.draw(lifeId);
       notifyMsg += '\n\n';
@@ -35,6 +38,9 @@ class SmzdmLotteryBot extends SmzdmBot {
     const vipId = await this.getActivityIdFromVip();
 
     if (vipId) {
+      $.log('等候 3 秒');
+      await $.wait(3000);
+
       notifyMsg += `转盘抽奖ID: ${vipId}\n`;
       notifyMsg += await this.draw(vipId);
     }
