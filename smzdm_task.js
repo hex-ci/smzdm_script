@@ -671,7 +671,7 @@ class SmzdmTaskBot extends SmzdmBot {
 
   // 获取任务列表
   async getTaskList() {
-    const { isSuccess, data } = await requestApi('https://user-api.smzdm.com/task/list_v2', {
+    const { isSuccess, data, response } = await requestApi('https://user-api.smzdm.com/task/list_v2', {
       method: 'post',
       headers: this.getHeaders()
     });
@@ -679,16 +679,28 @@ class SmzdmTaskBot extends SmzdmBot {
     if (isSuccess) {
       let tasks = [];
 
-      data.data.rows[0].cell_data.activity_task.accumulate_list.task_list_v2.forEach(item => {
-        tasks = tasks.concat(item.task_list);
-      });
+      if (data.data.rows[0]) {
+        data.data.rows[0].cell_data.activity_task.accumulate_list.task_list_v2.forEach(item => {
+          tasks = tasks.concat(item.task_list);
+        });
 
-      return {
-        tasks: tasks,
-        detail: data.data.rows[0]
-      };
+        return {
+          tasks: tasks,
+          detail: data.data.rows[0]
+        };
+      }
+      else {
+        $.log(`任务列表获取失败！${response}`);
+
+        return {
+          tasks: [],
+          detail: {}
+        };
+      }
     }
     else {
+      $.log(`任务列表获取失败！${response}`);
+
       return {
         tasks: [],
         detail: {}
