@@ -169,8 +169,8 @@ class SmzdmCheckinBot extends SmzdmBot {
     const sk = sks[i];
 
     if (i > 0) {
-      $.log('\n延迟 5 秒执行\n');
-      await $.wait(5000);
+      $.log('\n延迟 10 秒执行\n');
+      await $.wait(10000);
     }
 
     const sep = `\n****** 账号${i + 1} ******\n`;

@@ -33,7 +33,7 @@ class SmzdmTaskBot extends SmzdmBot {
 
         const { isSuccess } = await this.receiveReward(task.task_id);
 
-        notifyMsg += `领取[${task.task_name}]奖励${isSuccess ? '成功' : '失败！请查看日志'}\n`;
+        notifyMsg += `${isSuccess ? '🟢' : '❌'}领取[${task.task_name}]奖励${isSuccess ? '成功' : '失败！请查看日志'}\n`;
 
         $.log('等候 5 秒');
         await $.wait(5000);
@@ -44,7 +44,7 @@ class SmzdmTaskBot extends SmzdmBot {
         if (task.task_event_type == 'interactive.view.article') {
           const { isSuccess } = await this.doViewTask(task);
 
-          notifyMsg += `完成[${task.task_name}]任务${isSuccess ? '成功' : '失败！请查看日志'}\n`;
+          notifyMsg += `${isSuccess ? '🟢' : '❌'}完成[${task.task_name}]任务${isSuccess ? '成功' : '失败！请查看日志'}\n`;
 
           $.log('等候 5 秒');
           await $.wait(5000);
@@ -60,7 +60,7 @@ class SmzdmTaskBot extends SmzdmBot {
             result = await this.doShareTaskSingle(task);
           }
 
-          notifyMsg += `完成[${task.task_name}]任务${result.isSuccess ? '成功' : '失败！请查看日志'}\n`;
+          notifyMsg += `${isSuccess ? '🟢' : '❌'}完成[${task.task_name}]任务${result.isSuccess ? '成功' : '失败！请查看日志'}\n`;
 
           $.log('等候 5 秒');
           await $.wait(5000);
@@ -69,7 +69,7 @@ class SmzdmTaskBot extends SmzdmBot {
         else if (task.task_event_type == 'guide.crowd') {
           const { isSuccess, msg } = await this.doCrowdTask(task);
 
-          notifyMsg += `完成[${task.task_name}]任务${isSuccess ? '成功' : `失败！${msg || '请查看日志'}`}\n`;
+          notifyMsg += `${isSuccess ? '🟢' : '❌'}完成[${task.task_name}]任务${isSuccess ? '成功' : `失败！${msg || '请查看日志'}`}\n`;
 
           $.log('等候 5 秒');
           await $.wait(5000);
@@ -78,7 +78,7 @@ class SmzdmTaskBot extends SmzdmBot {
         else if (task.task_event_type == 'interactive.follow.user') {
           const { isSuccess } = await this.doFollowUserTask(task);
 
-          notifyMsg += `完成[${task.task_name}]任务${isSuccess ? '成功' : '失败！请查看日志'}\n`;
+          notifyMsg += `${isSuccess ? '🟢' : '❌'}完成[${task.task_name}]任务${isSuccess ? '成功' : '失败！请查看日志'}\n`;
 
           $.log('等候 5 秒');
           await $.wait(5000);
@@ -87,7 +87,7 @@ class SmzdmTaskBot extends SmzdmBot {
         else if (task.task_event_type == 'interactive.follow.tag') {
           const { isSuccess } = await this.doFollowTagTask(task);
 
-          notifyMsg += `完成[${task.task_name}]任务${isSuccess ? '成功' : '失败！请查看日志'}\n`;
+          notifyMsg += `${isSuccess ? '🟢' : '❌'}完成[${task.task_name}]任务${isSuccess ? '成功' : '失败！请查看日志'}\n`;
 
           $.log('等候 5 秒');
           await $.wait(5000);
@@ -96,7 +96,7 @@ class SmzdmTaskBot extends SmzdmBot {
         else if (task.task_event_type == 'interactive.favorite') {
           const { isSuccess } = await this.doFavoriteTask(task);
 
-          notifyMsg += `完成[${task.task_name}]任务${isSuccess ? '成功' : '失败！请查看日志'}\n`;
+          notifyMsg += `${isSuccess ? '🟢' : '❌'}完成[${task.task_name}]任务${isSuccess ? '成功' : '失败！请查看日志'}\n`;
 
           $.log('等候 5 秒');
           await $.wait(5000);
@@ -116,7 +116,7 @@ class SmzdmTaskBot extends SmzdmBot {
 
       const { isSuccess } = await this.receiveActivity(detail.cell_data);
 
-      notifyMsg += `奖励领取${isSuccess ? '成功' : '失败！请查看日志'}\n`;
+      notifyMsg += `${isSuccess ? '🟢' : '❌'}奖励领取${isSuccess ? '成功' : '失败！请查看日志'}\n`;
     }
     else {
       $.log('无奖励');
@@ -926,8 +926,8 @@ class SmzdmTaskBot extends SmzdmBot {
     }
 
     if (i > 0) {
-      $.log('\n延迟 5 秒执行\n');
-      await $.wait(5000);
+      $.log('\n延迟 10 秒执行\n');
+      await $.wait(10000);
     }
 
     const sep = `\n****** 账号${i + 1} ******\n`;
