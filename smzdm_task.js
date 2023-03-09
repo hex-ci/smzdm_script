@@ -67,9 +67,9 @@ class SmzdmTaskBot extends SmzdmBot {
         }
         // 抽奖任务
         else if (task.task_event_type == 'guide.crowd') {
-          const { isSuccess } = await this.doCrowdTask(task);
+          const { isSuccess, msg } = await this.doCrowdTask(task);
 
-          notifyMsg += `完成[${task.task_name}]任务${isSuccess ? '成功' : '失败！请查看日志'}\n`;
+          notifyMsg += `完成[${task.task_name}]任务${isSuccess ? '成功' : `失败！${msg || '请查看日志'}`}\n`;
 
           $.log('等候 5 秒');
           await $.wait(5000);
@@ -86,6 +86,15 @@ class SmzdmTaskBot extends SmzdmBot {
         // 关注栏目任务
         else if (task.task_event_type == 'interactive.follow.tag') {
           const { isSuccess } = await this.doFollowTagTask(task);
+
+          notifyMsg += `完成[${task.task_name}]任务${isSuccess ? '成功' : '失败！请查看日志'}\n`;
+
+          $.log('等候 5 秒');
+          await $.wait(5000);
+        }
+        // 收藏任务
+        else if (task.task_event_type == 'interactive.favorite') {
+          const { isSuccess } = await this.doFavoriteTask(task);
 
           notifyMsg += `完成[${task.task_name}]任务${isSuccess ? '成功' : '失败！请查看日志'}\n`;
 
@@ -114,6 +123,65 @@ class SmzdmTaskBot extends SmzdmBot {
     }
 
     return notifyMsg || '无可执行任务';
+  }
+
+  // 执行收藏任务
+  async doFavoriteTask(task) {
+    $.log(`开始任务: ${task.task_name}`);
+
+    let articleId = '';
+
+    if (task.task_redirect_url.link_val == '0') {
+      $.log('尚未支持');
+
+      return {
+        isSuccess: false
+      };
+    }
+    else {
+      articleId = task.task_redirect_url.link_val;
+    }
+
+    // 获取文章信息
+    const articleDetail = await this.getArticleDetail(articleId);
+
+    if (articleDetail === false) {
+      return {
+        isSuccess: false
+      };
+    }
+
+    $.log('等候 3 秒');
+    await $.wait(3000);
+
+    await this.favorite({
+      method: 'destroy',
+      id: articleId,
+      channelId: articleDetail.channel_id
+    });
+
+    $.log('等候 3 秒');
+    await $.wait(3000);
+
+    await this.favorite({
+      method: 'create',
+      id: articleId,
+      channelId: articleDetail.channel_id
+    });
+
+    $.log('等候 3 秒');
+    await $.wait(3000);
+
+    await this.favorite({
+      method: 'destroy',
+      id: articleId,
+      channelId: articleDetail.channel_id
+    });
+
+    $.log('延迟 5 秒领取奖励');
+    await $.wait(5000);
+
+    return await this.receiveReward(task.task_id);
   }
 
   // 执行关注用户任务
@@ -187,6 +255,9 @@ class SmzdmTaskBot extends SmzdmBot {
       }
 
       lanmuId = tag.lanmu_id;
+
+      $.log('等候 3 秒');
+      await $.wait(3000);
     }
     else {
       lanmuId = task.task_redirect_url.link_val;
@@ -202,6 +273,9 @@ class SmzdmTaskBot extends SmzdmBot {
         isSuccess: false
       };
     }
+
+    $.log('等候 3 秒');
+    await $.wait(3000);
 
     await this.follow({
       method: 'destroy',
@@ -244,7 +318,8 @@ class SmzdmTaskBot extends SmzdmBot {
 
     if (!isSuccess) {
       return {
-        isSuccess
+        isSuccess,
+        msg: '未找到免费抽奖'
       };
     }
 
@@ -638,13 +713,42 @@ class SmzdmTaskBot extends SmzdmBot {
     }
   }
 
+  async getRobotToken() {
+    const { isSuccess, data, response } = await requestApi('https://user-api.smzdm.com/robot/token', {
+      method: 'post',
+      headers: this.getHeaders()
+    });
+
+    if (isSuccess) {
+      return data.data.token;
+    }
+    else {
+      $.log(`Robot Token 获取失败！${response}`);
+
+      return false;
+    }
+  }
+
   // 领取任务奖励
   async receiveReward(taskId) {
+    const robotToken = await this.getRobotToken();
+
+    if (robotToken === false) {
+      return {
+        isSuccess,
+        msg: '领取任务奖励失败！'
+      };
+    }
+
     const { isSuccess, data, response } = await requestApi('https://user-api.smzdm.com/task/activity_task_receive', {
       method: 'post',
       headers: this.getHeaders(),
       data: {
-        token: this.token,
+        robot_token: robotToken,
+        geetest_seccode: '',
+        geetest_validate: '',
+        geetest_challenge: '',
+        captcha: '',
         task_id: taskId
       }
     });
@@ -749,6 +853,57 @@ class SmzdmTaskBot extends SmzdmBot {
 
       return false;
     }
+  }
+
+  // 获取文章详情
+  async getArticleDetail(id) {
+    const { isSuccess, data, response } = await requestApi(`https://article-api.smzdm.com/article_detail/${id}`, {
+      headers: this.getHeaders(),
+      data: {
+        comment_flow: '',
+        hashcode: '',
+        lastest_update_time: '',
+        uhome: 0,
+        imgmode: 0,
+        article_channel_id: 0,
+        h5hash: ''
+      }
+    });
+
+    if (isSuccess) {
+      return data.data;
+    }
+    else {
+      $.log(`获取文章详情失败！${response}`);
+
+      return false;
+    }
+  }
+
+  // 收藏
+  async favorite({id, channelId, method}) {
+    const { isSuccess, response } = await requestApi(`https://user-api.smzdm.com/favorites/${method}`, {
+      method: 'post',
+      headers: this.getHeaders(),
+      data: {
+        touchstone_event: '{}',
+        token: this.token,
+        id,
+        channel_id: channelId
+      }
+    });
+
+    if (isSuccess) {
+      $.log(`${method} 收藏成功: ${id}`);
+    }
+    else {
+      $.log(`${method} 收藏失败！${response}`);
+    }
+
+    return {
+      isSuccess,
+      response
+    };
   }
 }
 
