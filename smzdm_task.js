@@ -276,7 +276,7 @@ class SmzdmTaskBot extends SmzdmBot {
   async doShareTaskMulti(task) {
     $.log(`开始任务: ${task.task_name}`);
 
-    const articles = await this.getArticleList();
+    const articles = await this.getArticleList(task.task_even_num - task.task_finished_num);
 
     for (let i = 0; i < articles.length; i++) {
       $.log(`开始分享第 ${i + 1} 篇文章...`);
@@ -286,13 +286,13 @@ class SmzdmTaskBot extends SmzdmBot {
       $.log('等候 5 秒');
       await $.wait(3000);
 
-      await this.shareDailyReward(article.channel_id);
-      await this.shareCallback(article.article_id, article.channel_id);
+      await this.shareDailyReward(article.article_channel_id);
+      await this.shareCallback(article.article_id, article.article_channel_id);
 
       $.log('等候 3 秒');
       await $.wait(3000);
 
-      await this.shareArticleDone(article.article_id, article.channel_id);
+      await this.shareArticleDone(article.article_id, article.article_channel_id);
 
       $.log('等候 5 秒');
       await $.wait(5000);
@@ -497,13 +497,14 @@ class SmzdmTaskBot extends SmzdmBot {
 
   // 分享完成，可以领取奖励了
   async shareArticleDone(articleId, channelId) {
-    const { isSuccess, response } = await requestApi('https://user-api.smzdm.com/share/article_reward', {
+    const { isSuccess, response } = await requestApi('https://user-api.smzdm.com/share/complete_share_rule', {
       method: 'post',
       headers: this.getHeaders(),
       data: {
         token: this.token,
         article_id: articleId,
-        channel_id: channelId
+        channel_id: channelId,
+        tag_name: 'shouye'
       }
     });
 
@@ -533,7 +534,8 @@ class SmzdmTaskBot extends SmzdmBot {
       data: {
         token: this.token,
         article_id: articleId,
-        channel_id: channelId
+        channel_id: channelId,
+        touchstone_event: '{}'
       }
     });
 
@@ -595,18 +597,24 @@ class SmzdmTaskBot extends SmzdmBot {
   }
 
   // 获取 Web 文章列表
-  async getArticleList() {
-    const { isSuccess, data, response } = await requestApi('https://post.smzdm.com/json_more/?tab_id=tuijian&filterUrl=tuijian', {
-      sign: false,
-      headers: {
-        ...this.getHeadersForWeb(),
-        Referer: 'https://post.smzdm.com/'
+  async getArticleList(num) {
+    const { isSuccess, data, response } = await requestApi('https://article-api.smzdm.com/ranking_list/articles', {
+      headers: this.getHeaders(),
+      data: {
+        offset: 0,
+        channel_id: 76,
+        tab: 2,
+        order: 0,
+        limit: 20,
+        exclude_article_ids: '',
+        stream: 'a',
+        ab_code: 'b'
       }
     });
 
     if (isSuccess) {
-      // 目前只取前两个做任务
-      return data.data.slice(0, 2);
+      // 取前 num 个做任务
+      return data.data.rows.slice(0, num);
     }
     else {
       $.log(`获取文章列表失败: ${response}`);
