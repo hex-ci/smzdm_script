@@ -14,8 +14,10 @@ const notify = require('./sendNotify');
 const $ = new Env('什么值得买签到');
 
 class SmzdmCheckinBot extends SmzdmBot {
-  constructor(cookie) {
+  constructor(cookie, sk) {
     super(cookie);
+
+    this.sk = sk;
   }
 
   async run() {
@@ -34,7 +36,7 @@ class SmzdmCheckinBot extends SmzdmBot {
       headers: this.getHeaders(),
       data: {
         touchstone_event: '',
-        sk: '1',
+        sk: this.sk || '1',
         token: this.token,
         captcha: ''
       }
@@ -141,6 +143,20 @@ class SmzdmCheckinBot extends SmzdmBot {
     return;
   }
 
+  let sks = [];
+
+  if (process.env.SMZDM_SK) {
+    if (process.env.SMZDM_SK.indexOf('&') > -1) {
+      sks = process.env.SMZDM_SK.split('&');
+    }
+    else if (process.env.SMZDM_SK.indexOf('\n') > -1) {
+      sks = process.env.SMZDM_SK.split('\n');
+    }
+    else {
+      sks = [process.env.SMZDM_SK];
+    }
+  }
+
   let notifyContent = '';
 
   for (let i = 0; i < cookies.length; i++) {
@@ -149,6 +165,8 @@ class SmzdmCheckinBot extends SmzdmBot {
     if (!cookie) {
       continue;
     }
+
+    const sk = sks[i];
 
     if (i > 0) {
       $.log('\n延迟 5 秒执行\n');
@@ -159,7 +177,7 @@ class SmzdmCheckinBot extends SmzdmBot {
 
     $.log(sep);
 
-    const bot = new SmzdmCheckinBot(cookie);
+    const bot = new SmzdmCheckinBot(cookie, sk);
     const msg = await bot.run();
 
     notifyContent += sep + msg + '\n';
