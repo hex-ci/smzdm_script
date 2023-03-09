@@ -132,7 +132,7 @@ class SmzdmTaskBot extends SmzdmBot {
     $.log('等候 3 秒');
     await $.wait(3000);
 
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < Number(task.task_even_num - task.task_finished_num); i++) {
       if (user.is_follow == '1') {
         await this.follow({
           method: 'destroy',
@@ -178,15 +178,15 @@ class SmzdmTaskBot extends SmzdmBot {
     let lanmuId = '';
 
     if (task.task_redirect_url.link_val == '0') {
-      const tags = await this.getTags(1);
+      const tag = await this.getTagByRandom();
 
-      if (!tags[0]) {
+      if (tag === false) {
         return {
           isSuccess: false
         };
       }
 
-      lanmuId = tags[0].lanmu_id;
+      lanmuId = tag.lanmu_id;
     }
     else {
       lanmuId = task.task_redirect_url.link_val;
@@ -712,12 +712,13 @@ class SmzdmTaskBot extends SmzdmBot {
     }
     else {
       $.log(`获取栏目信息失败！${response}`);
+
       return {};
     }
   }
 
   // 获取栏目列表
-  async getTags(num) {
+  async getTagByRandom() {
     const { isSuccess, data, response } = await requestApi('https://dingyue-api.smzdm.com/tuijian/search_result', {
       headers: this.getHeaders(),
       data: {
@@ -729,11 +730,12 @@ class SmzdmTaskBot extends SmzdmBot {
     });
 
     if (isSuccess) {
-      return data.data.rows.slice(0, num);
+      return data.data.rows[Math.floor(Math.random() * data.data.rows.length)];
     }
     else {
       $.log(`获取栏目列表失败！${response}`);
-      return [];
+
+      return false;
     }
   }
 }
