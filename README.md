@@ -27,7 +27,9 @@ ql repo https://github.com/hex-ci/smzdm_script.git "" "env.js|bot.js|sendNotify.
 
 ### 抓包
 
-尽量使用 Android 手机抓包 `https://user-api.smzdm.com/checkin` 链接，把 cookie 取出来放到青龙面板的 SMZDM_COOKIE 环境变量中，多用户请添加多个同名环境变量或者用 `&` 符号分隔。
+建议使用 Android 手机抓包（iOS 也可以）`https://user-api.smzdm.com/checkin` 链接，把 cookie 取出来放到青龙面板的 SMZDM_COOKIE 环境变量中，多用户请添加多个同名环境变量或者用 `&` 符号分隔。
+
+如果手机实在抓不到，也可以用浏览器的 Cookie，但是强烈建议使用手机端的 Cookie。
 
 ## 交流
 
