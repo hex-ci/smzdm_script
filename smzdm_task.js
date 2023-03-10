@@ -116,7 +116,7 @@ class SmzdmTaskBot extends SmzdmBot {
 
       const { isSuccess } = await this.receiveActivity(detail.cell_data);
 
-      notifyMsg += `${isSuccess ? '🟢' : '❌'}奖励领取${isSuccess ? '成功' : '失败！请查看日志'}\n`;
+      notifyMsg += `${isSuccess ? '🟢' : '❌'}限时累计活动阶段奖励领取${isSuccess ? '成功' : '失败！请查看日志'}\n`;
     }
     else {
       $.log('无奖励');
