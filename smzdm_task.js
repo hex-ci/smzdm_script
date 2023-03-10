@@ -51,16 +51,9 @@ class SmzdmTaskBot extends SmzdmBot {
         }
         // 分享任务
         else if (task.task_event_type == 'interactive.share') {
-          let result;
+          const { isSuccess } = await this.doShareTask(task);
 
-          if (task.article_id == '0') {
-            result = await this.doShareTaskMulti(task);
-          }
-          else {
-            result = await this.doShareTaskSingle(task);
-          }
-
-          notifyMsg += `${result.isSuccess ? '🟢' : '❌'}完成[${task.task_name}]任务${result.isSuccess ? '成功' : '失败！请查看日志'}\n`;
+          notifyMsg += `${isSuccess ? '🟢' : '❌'}完成[${task.task_name}]任务${isSuccess ? '成功' : '失败！请查看日志'}\n`;
 
           $.log('等候 5 秒');
           await $.wait(5000);
@@ -340,34 +333,21 @@ class SmzdmTaskBot extends SmzdmBot {
     return await this.receiveReward(task.task_id);
   }
 
-  // 执行一篇文章的分享任务
-  async doShareTaskSingle(task) {
+  // 执行文章分享任务
+  async doShareTask(task) {
     $.log(`开始任务: ${task.task_name}`);
 
-    $.log(`开始分享文章...`);
+    let articles = [];
 
-    $.log('等候 5 秒');
-    await $.wait(5000);
-
-    await this.shareDailyReward(task.channel_id);
-    await this.shareCallback(task.article_id, task.channel_id);
-
-    $.log('等候 3 秒');
-    await $.wait(3000);
-
-    await this.shareArticleDone(task.article_id, task.channel_id);
-
-    $.log('延迟 5 秒领取奖励');
-    await $.wait(5000);
-
-    return await this.receiveReward(task.task_id);
-  }
-
-  // 执行多篇文章的分享任务
-  async doShareTaskMulti(task) {
-    $.log(`开始任务: ${task.task_name}`);
-
-    const articles = await this.getArticleList(task.task_even_num - task.task_finished_num);
+    if (task.article_id == '0') {
+      articles = await this.getArticleList(task.task_even_num - task.task_finished_num);
+    }
+    else {
+      articles = [{
+        article_id: task.article_id,
+        article_channel_id: task.channel_id
+      }];
+    }
 
     for (let i = 0; i < articles.length; i++) {
       $.log(`开始分享第 ${i + 1} 篇文章...`);
