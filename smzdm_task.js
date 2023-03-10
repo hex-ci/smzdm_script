@@ -60,7 +60,7 @@ class SmzdmTaskBot extends SmzdmBot {
             result = await this.doShareTaskSingle(task);
           }
 
-          notifyMsg += `${isSuccess ? '🟢' : '❌'}完成[${task.task_name}]任务${result.isSuccess ? '成功' : '失败！请查看日志'}\n`;
+          notifyMsg += `${result.isSuccess ? '🟢' : '❌'}完成[${task.task_name}]任务${result.isSuccess ? '成功' : '失败！请查看日志'}\n`;
 
           $.log('等候 5 秒');
           await $.wait(5000);
