@@ -20,7 +20,12 @@ class SmzdmTaskBot extends SmzdmBot {
 
   // 主函数
   async run() {
+    $.log('获取任务列表');
+
     const { tasks } = await this.getTaskList();
+
+    $.log('等候 5 秒');
+    await $.wait(5000);
 
     let notifyMsg = '';
 
@@ -341,6 +346,9 @@ class SmzdmTaskBot extends SmzdmBot {
 
     if (task.article_id == '0') {
       articles = await this.getArticleList(task.task_even_num - task.task_finished_num);
+
+      $.log('等候 3 秒');
+      await $.wait(3000);
     }
     else {
       articles = [{
@@ -354,15 +362,14 @@ class SmzdmTaskBot extends SmzdmBot {
 
       const article = articles[i];
 
-      $.log('等候 5 秒');
-      await $.wait(3000);
+      // 模拟打开文章
+      await this.getArticleDetail(article.article_id);
+
+      $.log('等候 8 秒');
+      await $.wait(8000);
 
       await this.shareDailyReward(article.article_channel_id);
       await this.shareCallback(article.article_id, article.article_channel_id);
-
-      $.log('等候 3 秒');
-      await $.wait(3000);
-
       await this.shareArticleDone(article.article_id, article.article_channel_id);
 
       $.log('等候 5 秒');
@@ -379,8 +386,13 @@ class SmzdmTaskBot extends SmzdmBot {
   async doViewTask(task) {
     $.log(`开始任务: ${task.task_name}`);
 
-    $.log('延迟 11 秒模拟阅读文章');
-    await $.wait(11000);
+    if (task.task_redirect_url.link_val) {
+      // 模拟打开文章
+      await this.getArticleDetail(task.task_redirect_url.link_val);
+    }
+
+    $.log('延迟 15 秒模拟阅读文章');
+    await $.wait(15000);
 
     const { isSuccess, response } = await requestApi('https://user-api.smzdm.com/task/event_view_article', {
       method: 'post',
@@ -575,7 +587,7 @@ class SmzdmTaskBot extends SmzdmBot {
         token: this.token,
         article_id: articleId,
         channel_id: channelId,
-        tag_name: 'shouye'
+        tag_name: 'gerenzhongxin'
       }
     });
 
