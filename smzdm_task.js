@@ -368,9 +368,9 @@ class SmzdmTaskBot extends SmzdmBot {
       $.log('等候 8 秒');
       await $.wait(8000);
 
+      await this.shareArticleDone(article.article_id, article.article_channel_id);
       await this.shareDailyReward(article.article_channel_id);
       await this.shareCallback(article.article_id, article.article_channel_id);
-      await this.shareArticleDone(article.article_id, article.article_channel_id);
 
       $.log('等候 5 秒');
       await $.wait(5000);
@@ -394,13 +394,13 @@ class SmzdmTaskBot extends SmzdmBot {
     $.log('延迟 15 秒模拟阅读文章');
     await $.wait(15000);
 
-    const { isSuccess, response } = await requestApi('https://user-api.smzdm.com/task/event_view_article', {
+    const { isSuccess, response } = await requestApi('https://user-api.smzdm.com/task/event_view_article_sync', {
       method: 'post',
       headers: this.getHeaders(),
       data: {
-        token: this.token,
         article_id: task.article_id,
-        channel_id: task.channel_id
+        channel_id: task.channel_id,
+        task_id: task.task_id
       }
     });
 
@@ -450,11 +450,38 @@ class SmzdmTaskBot extends SmzdmBot {
 
   // 关注/取关
   async follow({keywordId, keyword, type, method}) {
+    let touchstone = '';
+
+    if (type === 'user') {
+      touchstone = this.getTouchstoneEvent({
+        event_value: {
+          cid: 'null',
+          is_detail: false,
+          p: '1'
+        },
+        sourceMode: '我的_我的任务页',
+        sourcePage: 'Android/关注/达人/爆料榜',
+        upperLevel_url: '关注/达人/推荐/'
+      });
+    }
+    else if (type === 'tag') {
+      touchstone = this.getTouchstoneEvent({
+        event_value: {
+          aid: '',
+          cid: 11,
+          is_detail: true
+        },
+        sourceMode: '我的_我的任务页',
+        sourcePage: `Android/栏目页//${keywordId}/`,
+        upperLevel_url: '长图文/P//'
+      });
+    }
+
     const { isSuccess, response } = await requestApi(`https://dingyue-api.smzdm.com/dingyue/${method}`, {
       method: 'post',
       headers: this.getHeaders(),
       data: {
-        touchstone_event: '{}',
+        touchstone_event: touchstone,
         refer: '',
         keyword_id: keywordId,
         keyword,
@@ -578,7 +605,7 @@ class SmzdmTaskBot extends SmzdmBot {
     }
   }
 
-  // 分享完成，可以领取奖励了
+  // 分享完成
   async shareArticleDone(articleId, channelId) {
     const { isSuccess, response } = await requestApi('https://user-api.smzdm.com/share/complete_share_rule', {
       method: 'post',
@@ -618,7 +645,17 @@ class SmzdmTaskBot extends SmzdmBot {
         token: this.token,
         article_id: articleId,
         channel_id: channelId,
-        touchstone_event: '{}'
+        touchstone_event: this.getTouchstoneEvent({
+          event_value: {
+            aid: articleId,
+            cid: channelId,
+            is_detail: true,
+            pid: '无'
+          },
+          sourceMode: '排行榜_社区_好文精选',
+          sourcePage: `Android/长图文/P/${articleId}/`,
+          upperLevel_url: '排行榜/社区/好文精选/文章_24H/'
+        })
       }
     });
 
@@ -878,7 +915,16 @@ class SmzdmTaskBot extends SmzdmBot {
       method: 'post',
       headers: this.getHeaders(),
       data: {
-        touchstone_event: '{}',
+        touchstone_event: this.getTouchstoneEvent({
+          event_value: {
+            aid: id,
+            cid: channelId,
+            is_detail: true
+          },
+          sourceMode: '我的_我的任务页',
+          sourcePage: `Android/长图文/P/${id}/`,
+          upperLevel_url: '个人中心/赚奖励/'
+        }),
         token: this.token,
         id,
         channel_id: channelId
@@ -896,6 +942,17 @@ class SmzdmTaskBot extends SmzdmBot {
       isSuccess,
       response
     };
+  }
+
+  getTouchstoneEvent(obj) {
+    const defaultObj = {
+      search_tv: 'f',
+      sourceRoot: '个人中心',
+      trafic_version: '113_a,115_b,116_e,118_b,131_b,132_b,134_b,136_b,139_a,144_a,150_b,153_a,179_a,183_b,185_b,188_b,189_b,193_a,196_b,201_a,204_a,205_a,208_b,222_b,226_a,228_a,22_b,230_b,232_b,239_b,254_a,255_b,256_b,258_b,260_b,265_a,267_a,269_a,270_c,273_b,276_a,278_a,27_a,280_a,281_a,283_b,286_a,287_a,290_a,291_b,295_a,302_a,306_b,308_b,312_b,314_a,317_a,318_a,322_b,325_a,326_a,329_b,32_c,332_b,337_c,341_a,347_a,349_b,34_a,351_a,353_b,355_a,357_b,366_b,373_B,376_b,378_b,380_b,388_b,391_b,401_d,403_b,405_b,407_b,416_a,421_a,424_b,425_b,427_a,436_b,43_j,440_a,442_a,444_b,448_a,450_b,451_b,454_b,455_a,458_c,460_a,463_c,464_b,466_b,467_b,46_a,470_b,471_b,474_b,475_a,484_b,489_a,494_b,496_b,498_a,500_a,503_b,507_b,510_bb,512_b,515_a,520_a,522_b,525_c,527_b,528_a,59_a,65_b,85_b,102_b,103_a,106_b,107_b,10_f,11_b,120_a,143_b,157_g,158_c,159_c,160_f,161_d,162_e,163_a,164_a,165_a,166_f,171_a,174_a,175_e,176_d,209_b,225_a,235_a,236_b,237_c,272_b,296_c,2_f,309_a,315_b,334_a,335_d,339_b,346_b,361_b,362_d,367_b,368_a,369_e,374_b,381_c,382_b,383_d,385_b,386_c,389_i,38_b,390_d,396_a,398_b,3_a,413_a,417_a,418_c,419_b,420_b,422_e,428_a,430_a,431_d,432_e,433_a,437_b,438_c,478_b,479_b,47_a,480_a,481_b,482_a,483_a,488_b,491_j,492_j,504_b,505_a,514_a,518_b,52_d,53_d,54_v,55_z1,56_z3,66_a,67_i,68_a1,69_i,74_i,77_d,93_a',
+      tv: 'z1'
+    };
+
+    return JSON.stringify({...defaultObj, ...obj});
   }
 }
 
