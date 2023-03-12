@@ -41,7 +41,7 @@ ql repo https://github.com/hex-ci/smzdm_script.git "" "env.js|bot.js|sendNotify.
 * https://juejin.cn/post/7091524392005566471
 * https://www.caq98i.top/article/?page=38
 
-## 交流
+## 交流群
 
 https://t.me/smzdm_script
 
