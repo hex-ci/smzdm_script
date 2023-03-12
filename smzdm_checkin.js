@@ -21,13 +21,13 @@ class SmzdmCheckinBot extends SmzdmBot {
   }
 
   async run() {
-    const { msg } = await this.checkin();
+    const { msg: msg1 } = await this.checkin();
 
-    await this.allReward();
+    const { msg: msg2 } = await this.allReward();
 
-    await this.extraReward();
+    const { msg: msg3 } = await this.extraReward();
 
-    return msg;
+    return `${msg1}${msg2}${msg3}`;
   }
 
   async checkin() {
@@ -55,7 +55,7 @@ class SmzdmCheckinBot extends SmzdmBot {
 
       return {
         isSuccess,
-        msg
+        msg: `${msg}\n\n`
       };
     }
     else {
@@ -75,27 +75,40 @@ class SmzdmCheckinBot extends SmzdmBot {
     });
 
     if (isSuccess) {
-      $.log(`${data.data.normal_reward.reward_add.title}: ${data.data.normal_reward.reward_add.content}`);
-      $.log(`${data.data.normal_reward.gift.title}: ${data.data.normal_reward.gift.content_str}\n`);
+      const msg1 = `${data.data.normal_reward.reward_add.title}: ${data.data.normal_reward.reward_add.content}`;
+      const msg2 = `${data.data.normal_reward.gift.title}: ${data.data.normal_reward.gift.content_str}`;
+
+      $.log(`${msg1}\n${msg2}\n`);
+
+      return {
+        isSuccess,
+        msg: `${msg1}\n${msg2}\n\n`
+      };
     }
     else {
       if (data.error_code != '4') {
         $.log(`查询奖励失败！${response}`);
       }
-    }
 
-    return {
-      isSuccess
-    };
+      return {
+        isSuccess,
+        msg: ''
+      };
+    }
   }
 
   async extraReward() {
     const isContinue = await this.isContinueCheckin();
 
     if (!isContinue) {
-      $.log('今天没有额外奖励\n');
+      const msg = '今天没有额外奖励';
 
-      return false;
+      $.log(`${msg}\n`);
+
+      return {
+        isSuccess: false,
+        msg: `${msg}\n`
+      };
     }
 
     const { isSuccess, data, response } = await requestApi('https://user-api.smzdm.com/checkin/extra_reward', {
@@ -104,14 +117,22 @@ class SmzdmCheckinBot extends SmzdmBot {
     });
 
     if (isSuccess) {
-      $.log(`${data.data.title}: ${removeTags(data.data.gift.content)}`);
+      const msg = `${data.data.title}: ${removeTags(data.data.gift.content)}`;
 
-      return true;
+      $.log(msg);
+
+      return {
+        isSuccess: true,
+        msg: `${msg}\n`
+      };
     }
     else {
       $.log(`领取额外奖励失败！${response}`);
 
-      return false;
+      return {
+        isSuccess: false,
+        msg: ''
+      };
     }
   }
 
