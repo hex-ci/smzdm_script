@@ -31,6 +31,16 @@ ql repo https://github.com/hex-ci/smzdm_script.git "" "env.js|bot.js|sendNotify.
 
 如果手机实在抓不到，也可以用浏览器的 Cookie，但是强烈建议使用手机端的 Cookie。
 
+#### 抓包教程
+
+以下教程请大家自行尝试，本人没有亲自尝试，如有问题可以进群交流。
+
+* https://www.jianshu.com/p/5e5524868442
+* https://www.zqh.plus/2022/03/19/Android-Capture/
+* https://jishuin.proginn.com/p/763bfbd5f92e
+* https://juejin.cn/post/7091524392005566471
+* https://www.caq98i.top/article/?page=38
+
 ## 交流
 
 https://t.me/smzdm_script
