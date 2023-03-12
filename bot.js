@@ -132,7 +132,7 @@ const getEnvCookies = () => {
 
 class SmzdmBot {
   constructor(cookie) {
-    this.cookie = cookie;
+    this.cookie = cookie.trim();
 
     const match = this.cookie.match(/sess=(.*?);/);
     this.token = match ? match[1] : '';
