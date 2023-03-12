@@ -43,13 +43,22 @@ class SmzdmCheckinBot extends SmzdmBot {
     });
 
     if (isSuccess) {
-      const msg = `⭐签到成功${data.data.daily_num}天
+      let msg = `⭐签到成功${data.data.daily_num}天
 🏅金币: ${data.data.cgold}
 🏅碎银: ${data.data.pre_re_silver}
-🏅积分: ${data.data.cpoints}
-🏅经验: ${data.data.cexperience}
-🏅等级: ${data.data.rank}
 🏅补签卡: ${data.data.cards}`;
+
+      $.log('等候 3 秒获取信息\n');
+      await $.wait(3000);
+
+      const vip = await this.getVipInfo();
+
+      if (vip) {
+        msg += `\n🏅经验: ${vip.vip.exp_current}
+🏅值会员等级: ${vip.vip.exp_level}
+🏅值会员经验: ${vip.vip.exp_current_level}
+🏅值会员有效期至: ${vip.vip.exp_level_expire}`;
+      }
 
       $.log(`${msg}\n`);
 
@@ -111,6 +120,9 @@ class SmzdmCheckinBot extends SmzdmBot {
       };
     }
 
+    $.log('等候 5 秒');
+    await $.wait(5000);
+
     const { isSuccess, data, response } = await requestApi('https://user-api.smzdm.com/checkin/extra_reward', {
       method: 'post',
       headers: this.getHeaders()
@@ -149,6 +161,25 @@ class SmzdmCheckinBot extends SmzdmBot {
     }
     else {
       $.log(`查询是否有额外奖励失败！${response}`);
+
+      return false;
+    }
+  }
+
+  async getVipInfo() {
+    const { isSuccess, data, response } = await requestApi('https://user-api.smzdm.com/vip', {
+      method: 'post',
+      headers: this.getHeaders(),
+      data: {
+        token: this.token
+      }
+    });
+
+    if (isSuccess) {
+      return data.data;
+    }
+    else {
+      $.log(`查询信息失败！${response}`);
 
       return false;
     }
