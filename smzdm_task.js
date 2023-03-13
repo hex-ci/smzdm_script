@@ -421,13 +421,12 @@ class SmzdmTaskBot extends SmzdmBot {
 
   // 领取活动奖励
   async receiveActivity(activity) {
-    $.log(`领取活动奖励: ${activity.activity_name}`);
+    $.log(`领取奖励: ${activity.activity_name}`);
 
     const { isSuccess, data, response } = await requestApi('https://user-api.smzdm.com/task/activity_receive', {
       method: 'post',
       headers: this.getHeaders(),
       data: {
-        token: this.token,
         activity_id: activity.activity_id
       }
     });
@@ -440,7 +439,7 @@ class SmzdmTaskBot extends SmzdmBot {
       };
     }
     else {
-      $.log(`领取活动奖励失败！${response}`);
+      $.log(`领取奖励失败！${response}`);
 
       return {
         isSuccess
