@@ -17,7 +17,7 @@ class SmzdmCheckinBot extends SmzdmBot {
   constructor(cookie, sk) {
     super(cookie);
 
-    this.sk = sk.trim();
+    this.sk = sk ? sk.trim() : '';
   }
 
   async run() {
