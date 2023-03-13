@@ -44,7 +44,7 @@ ql repo https://github.com/hex-ci/smzdm_script.git "" "env.js|bot.js|sendNotify.
 ### 青龙环境变量
 
 * SMZDM_COOKIE: 抓包抓到的 Cookie 内容，需要所有 Cookie 内容，多用户可以用 `&` 分隔，或者使用多个同名环境变量。
-* SMZDM_SK: 这个值是可选值，是从安卓 App 的 `https://user-api.smzdm.com/checkin` 请求参数中抓包抓到的，如果抓到这个值可以填写，如果没抓到可以忽略，多用户可以用 `&` 分隔，或者使用多个同名环境变量，顺序要保持与 `SMZDM_COOKIE` 多用户顺序一致。
+* SMZDM_SK: 这个值是可选值，是从安卓 App 的 `https://user-api.smzdm.com/checkin` 请求参数中抓包抓到的，如果抓到这个值可以填写（强烈建议填写），如果没抓到可以忽略，多用户可以用 `&` 分隔，或者使用多个同名环境变量，顺序要保持与 `SMZDM_COOKIE` 多用户顺序一致。
 
 ## 交流群
 
