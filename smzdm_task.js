@@ -466,13 +466,17 @@ class SmzdmTaskBot extends SmzdmBot {
     else if (type === 'tag') {
       touchstone = this.getTouchstoneEvent({
         event_value: {
-          aid: '',
-          cid: 11,
-          is_detail: true
+          cid: 'null',
+          is_detail: false
         },
-        sourceMode: '我的_我的任务页',
-        sourcePage: `Android/栏目页//${keywordId}/`,
-        upperLevel_url: '长图文/P//'
+        sourceMode: '栏目页',
+        sourcePage: `Android/栏目页/${keyword}/${keywordId}/`,
+        source_page_type_id: String(keywordId),
+        upperLevel_url: '个人中心/赚奖励/',
+        source_area: {
+          lanmu_id: String(keywordId),
+          prev_source_scence: '我的_我的任务页'
+        }
       });
     }
 

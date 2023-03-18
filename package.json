@@ -1,0 +1,22 @@
+{
+  "name": "smzdm_script",
+  "version": "1.0.0",
+  "description": "什么值得买自用脚本 for 青龙面板，支持 App 端签到、转盘抽奖、每日任务等功能",
+  "main": "smzdm_checkin.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hex-ci/smzdm_script.git"
+  },
+  "author": "Hex",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/hex-ci/smzdm_script/issues"
+  },
+  "homepage": "https://github.com/hex-ci/smzdm_script",
+  "devDependencies": {
+    "eslint": "^8.36.0"
+  }
+}
