@@ -5,10 +5,17 @@
     "node": true
   },
   "extends": "eslint:recommended",
-  "overrides": [
-  ],
   "parserOptions": {
     "ecmaVersion": "latest"
+  },
+  "globals": {
+    "$persistentStore": true,
+    "$prefs": true,
+    "$httpClient": true,
+    "$task": true,
+    "$notification": true,
+    "$done": true,
+    "$notify": true
   },
   "rules": {
     "indent": ["warn", 2, {"SwitchCase": 1}],

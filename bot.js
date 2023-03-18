@@ -76,7 +76,7 @@ const requestApi = async (url, inputOptions = {}) => {
 
   const gotOptions = {
     method: options.method.toUpperCase(),
-    headers: options.headers,
+    headers: options.headers
   };
 
   if (options.method === 'get') {
