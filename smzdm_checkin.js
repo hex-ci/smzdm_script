@@ -80,7 +80,8 @@ class SmzdmCheckinBot extends SmzdmBot {
   async allReward() {
     const { isSuccess, data, response } = await requestApi('https://user-api.smzdm.com/checkin/all_reward', {
       method: 'post',
-      headers: this.getHeaders()
+      headers: this.getHeaders(),
+      debug: process.env.SMZDM_DEBUG
     });
 
     if (isSuccess) {

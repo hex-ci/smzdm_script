@@ -89,12 +89,32 @@ const requestApi = async (url, inputOptions = {}) => {
   return got(url, gotOptions).then((response) => {
     const data = options.parseJSON === false ? response.body : parseJSON(response.body);
 
+    if (options.debug) {
+      console.log('------------------------');
+      console.log(url);
+      console.log('------------------------');
+      console.log(JSON.stringify(gotOptions, null, 2));
+      console.log('------------------------');
+      console.log(options.parseJSON === false ? response.body : JSON.stringify(data, null, 2));
+      console.log('------------------------');
+    }
+
     return {
       isSuccess: options.parseJSON === false ? true : (data.error_code == '0'),
-      response: options.parseJSON === false ? response.body : JSON.stringify(data),
+      response: options.parseJSON === false ? response.body : JSON.stringify(data, null, 2),
       data
     };
   }).catch((error) => {
+    if (options.debug) {
+      console.log('------------------------');
+      console.log(url);
+      console.log('------------------------');
+      console.log(JSON.stringify(gotOptions, null, 2));
+      console.log('------------------------');
+      console.log(error);
+      console.log('------------------------');
+    }
+
     return {
       isSuccess: false,
       response: error,
