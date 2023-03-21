@@ -64,14 +64,14 @@ class SmzdmTaskBot extends SmzdmBot {
           await $.wait(5000);
         }
         // 抽奖任务
-        else if (task.task_event_type == 'guide.crowd') {
-          const { isSuccess, msg } = await this.doCrowdTask(task);
+        // else if (task.task_event_type == 'guide.crowd') {
+        //   const { isSuccess, msg } = await this.doCrowdTask(task);
 
-          notifyMsg += `${isSuccess ? '🟢' : '❌'}完成[${task.task_name}]任务${isSuccess ? '成功' : `失败！${msg || '请查看日志'}`}\n`;
+        //   notifyMsg += `${isSuccess ? '🟢' : '❌'}完成[${task.task_name}]任务${isSuccess ? '成功' : `失败！${msg || '请查看日志'}`}\n`;
 
-          $.log('等候 5 秒');
-          await $.wait(5000);
-        }
+        //   $.log('等候 5 秒');
+        //   await $.wait(5000);
+        // }
         // 关注用户任务
         else if (task.task_event_type == 'interactive.follow.user') {
           const { isSuccess } = await this.doFollowUserTask(task);
@@ -350,6 +350,12 @@ class SmzdmTaskBot extends SmzdmBot {
       $.log('等候 3 秒');
       await $.wait(3000);
     }
+    else if (task.task_redirect_url.link_type === 'other') {
+      articles = [{
+        article_id: '',
+        article_channel_id: ''
+      }];
+    }
     else {
       articles = [{
         article_id: task.article_id,
@@ -362,11 +368,13 @@ class SmzdmTaskBot extends SmzdmBot {
 
       const article = articles[i];
 
-      // 模拟打开文章
-      await this.getArticleDetail(article.article_id);
+      if (article.article_id) {
+        // 模拟打开文章
+        await this.getArticleDetail(article.article_id);
 
-      $.log('等候 8 秒');
-      await $.wait(8000);
+        $.log('等候 8 秒');
+        await $.wait(8000);
+      }
 
       await this.shareArticleDone(article.article_id, article.article_channel_id);
       await this.shareDailyReward(article.article_channel_id);
