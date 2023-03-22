@@ -350,12 +350,6 @@ class SmzdmTaskBot extends SmzdmBot {
       $.log('等候 3 秒');
       await $.wait(3000);
     }
-    else if (task.task_redirect_url.link_type === 'other') {
-      articles = [{
-        article_id: '',
-        article_channel_id: ''
-      }];
-    }
     else {
       articles = [{
         article_id: task.article_id,
@@ -368,7 +362,7 @@ class SmzdmTaskBot extends SmzdmBot {
 
       const article = articles[i];
 
-      if (article.article_id) {
+      if (task.task_redirect_url.link_type != 'other') {
         // 模拟打开文章
         await this.getArticleDetail(article.article_id);
 
