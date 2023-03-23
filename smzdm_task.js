@@ -443,37 +443,57 @@ class SmzdmTaskBot extends SmzdmBot {
   async doViewTask(task) {
     $.log(`开始任务: ${task.task_name}`);
 
+    let articles = [];
+
     if (task.task_redirect_url.link_val) {
-      // 模拟打开文章
-      await this.getArticleDetail(task.task_redirect_url.link_val);
-    }
-
-    $.log('延迟 15 秒模拟阅读文章');
-    await $.wait(15000);
-
-    const { isSuccess, response } = await requestApi('https://user-api.smzdm.com/task/event_view_article_sync', {
-      method: 'post',
-      headers: this.getHeaders(),
-      data: {
+      articles = [{
         article_id: task.article_id,
-        channel_id: task.channel_id,
-        task_id: task.task_id
-      }
-    });
-
-    if (isSuccess) {
-      $.log('延迟 3 秒领取奖励');
-      await $.wait(3000);
-
-      return await this.receiveReward(task.task_id);
+        article_channel_id: task.channel_id
+      }];
     }
     else {
-      $.log(`任务异常！${response}`);
+      articles = await this.getArticleList(task.task_even_num - task.task_finished_num);
 
-      return {
-        isSuccess
-      };
+      $.log('等候 3 秒');
+      await $.wait(3000);
     }
+
+    for (let i = 0; i < articles.length; i++) {
+      $.log(`开始阅读第 ${i + 1} 篇文章...`);
+
+      const article = articles[i];
+
+      // 模拟打开文章
+      await this.getArticleDetail(article.article_id);
+
+      $.log('延迟 15 秒模拟阅读文章');
+      await $.wait(15000);
+
+      const { isSuccess, response } = await requestApi('https://user-api.smzdm.com/task/event_view_article_sync', {
+        method: 'post',
+        headers: this.getHeaders(),
+        data: {
+          article_id: article.article_id,
+          channel_id: article.article_channel_id,
+          task_id: task.task_id
+        }
+      });
+
+      if (isSuccess) {
+        $.log('完成阅读成功。');
+      }
+      else {
+        $.log(`完成阅读失败！${response}`);
+      }
+
+      $.log('等候 5 秒');
+      await $.wait(5000);
+    }
+
+    $.log('延迟 3 秒领取奖励');
+    await $.wait(3000);
+
+    return await this.receiveReward(task.task_id);
   }
 
   // 领取活动奖励
