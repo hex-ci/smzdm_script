@@ -90,6 +90,15 @@ class SmzdmTaskBot extends SmzdmBot {
           $.log('等候 5 秒');
           await $.wait(5000);
         }
+        // 关注品牌
+        else if (task.task_event_type == 'interactive.follow.brand') {
+          const { isSuccess } = await this.doFollowBrandTask(task);
+
+          notifyMsg += `${isSuccess ? '🟢' : '❌'}完成[${task.task_name}]任务${isSuccess ? '成功' : '失败！请查看日志'}\n`;
+
+          $.log('等候 5 秒');
+          await $.wait(5000);
+        }
         // 收藏任务
         else if (task.task_event_type == 'interactive.favorite') {
           const { isSuccess } = await this.doFavoriteTask(task);
@@ -300,6 +309,52 @@ class SmzdmTaskBot extends SmzdmBot {
       type: 'tag',
       keywordId: tagDetail.lanmu_id,
       keyword: tagDetail.lanmu_info.lanmu_name
+    });
+
+    $.log('延迟 5 秒领取奖励');
+    await $.wait(5000);
+
+    return await this.receiveReward(task.task_id);
+  }
+
+  // 执行关注品牌任务（先取关，再关注，最后取关）
+  async doFollowBrandTask(task) {
+    $.log(`开始任务: ${task.task_name}`);
+
+    // 获取品牌信息
+    const brandDetail = await this.getBrandDetail(task.task_redirect_url.link_val);
+
+    if (!brandDetail.id) {
+      return {
+        isSuccess: false
+      };
+    }
+
+    $.log('等候 3 秒');
+    await $.wait(3000);
+
+    await this.followBrand({
+      method: 'dingyue_lanmu_del',
+      keywordId: brandDetail.id,
+      keyword: brandDetail.title
+    });
+
+    $.log('等候 3 秒');
+    await $.wait(3000);
+
+    await this.followBrand({
+      method: 'dingyue_lanmu_add',
+      keywordId: brandDetail.id,
+      keyword: brandDetail.title
+    });
+
+    $.log('等候 3 秒');
+    await $.wait(3000);
+
+    await this.followBrand({
+      method: 'dingyue_lanmu_del',
+      keywordId: brandDetail.id,
+      keyword: brandDetail.title
     });
 
     $.log('延迟 5 秒领取奖励');
@@ -958,6 +1013,66 @@ class SmzdmTaskBot extends SmzdmBot {
     };
 
     return JSON.stringify({...defaultObj, ...obj});
+  }
+
+  // 关注品牌
+  async followBrand({keywordId, keyword, method}) {
+    const touchstone = this.getTouchstoneEvent({
+      event_value: {
+        cid: '44',
+        is_detail: true,
+        aid: String(keywordId)
+      },
+      sourceMode: '百科_品牌详情页',
+      sourcePage: `Android/其他/品牌详情页/${keyword}/${keywordId}/`,
+      upperLevel_url: '个人中心/赚奖励/'
+    });
+
+    const { isSuccess, response } = await requestApi(`https://dingyue-api.smzdm.com/dy/util/api/user_action`, {
+      method: 'post',
+      headers: this.getHeaders(),
+      data: {
+        action: method,
+        params: JSON.stringify({
+          keyword: keywordId,
+          keyword_id: keywordId,
+          type: 'brand'
+        }),
+        refer: `Android/其他/品牌详情页/${keyword}/${keywordId}/`,
+        touchstone_event: touchstone
+      }
+    });
+
+    if (isSuccess) {
+      $.log(`${method} 关注成功: ${keyword}`);
+    }
+    else {
+      $.log(`${method} 关注失败！${response}`);
+    }
+
+    return {
+      isSuccess,
+      response
+    };
+  }
+
+  // 获取品牌信息
+  async getBrandDetail(id) {
+    const { isSuccess, data, response } = await requestApi('https://brand-api.smzdm.com/brand/brand_basic', {
+      headers: this.getHeaders(),
+      data: {
+        brand_id: id
+      }
+    });
+
+    if (isSuccess) {
+      return data.data;
+    }
+    else {
+      $.log(`获取品牌信息失败！${response}`);
+
+      return {};
+    }
   }
 }
 

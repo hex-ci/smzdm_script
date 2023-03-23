@@ -47,7 +47,7 @@ const signFormData = (data) => {
   };
 
   const keys = Object.keys(newData).filter(key => newData[key] !== '').sort();
-  const signData = keys.map(key => `${key}=${newData[key]}`).join('&');
+  const signData = keys.map(key => `${key}=${String(newData[key]).replace(/\s+/, '')}`).join('&');
   const sign = crypto.createHash('md5').update(`${signData}&key=${SIGN_KEY}`).digest('hex').toUpperCase();
 
   return {
