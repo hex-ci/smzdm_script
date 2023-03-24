@@ -444,18 +444,22 @@ class SmzdmTaskBot extends SmzdmBot {
     $.log(`开始任务: ${task.task_name}`);
 
     let articles = [];
+    let isRead = true;
 
-    if (task.task_redirect_url.link_val) {
-      articles = [{
-        article_id: task.article_id,
-        article_channel_id: task.channel_id
-      }];
-    }
-    else {
+    if (task.article_id == '0') {
+      isRead = true;
       articles = await this.getArticleList(task.task_even_num - task.task_finished_num);
 
       $.log('等候 3 秒');
       await $.wait(3000);
+    }
+    else {
+      articles = [{
+        article_id: task.article_id,
+        article_channel_id: task.channel_id
+      }];
+
+      isRead = task.task_redirect_url.link_val != '';
     }
 
     for (let i = 0; i < articles.length; i++) {
@@ -463,8 +467,10 @@ class SmzdmTaskBot extends SmzdmBot {
 
       const article = articles[i];
 
-      // 模拟打开文章
-      await this.getArticleDetail(article.article_id);
+      if (isRead) {
+        // 模拟打开文章
+        await this.getArticleDetail(article.article_id);
+      }
 
       $.log('延迟 15 秒模拟阅读文章');
       await $.wait(15000);
