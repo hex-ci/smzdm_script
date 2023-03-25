@@ -419,7 +419,7 @@ class SmzdmTaskBot extends SmzdmBot {
 
       if (task.task_redirect_url.link_type != 'other') {
         // 模拟打开文章
-        await this.getArticleDetail(article.article_id);
+        await this.getArticleDetail(article.article_id, true);
 
         $.log('等候 8 秒');
         await $.wait(8000);
@@ -469,7 +469,7 @@ class SmzdmTaskBot extends SmzdmBot {
 
       if (isRead) {
         // 模拟打开文章
-        await this.getArticleDetail(article.article_id);
+        await this.getArticleDetail(article.article_id, true);
       }
 
       $.log('延迟 15 秒模拟阅读文章');
@@ -971,7 +971,7 @@ class SmzdmTaskBot extends SmzdmBot {
   }
 
   // 获取文章详情
-  async getArticleDetail(id) {
+  async getArticleDetail(id, isQuiet = false) {
     const { isSuccess, data, response } = await requestApi(`https://article-api.smzdm.com/article_detail/${id}`, {
       headers: this.getHeaders(),
       data: {
@@ -989,7 +989,9 @@ class SmzdmTaskBot extends SmzdmBot {
       return data.data;
     }
     else {
-      $.log(`获取文章详情失败！${response}`);
+      if (!isQuiet) {
+        $.log(`获取文章详情失败！${response}`);
+      }
 
       return false;
     }
