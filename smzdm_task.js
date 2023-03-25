@@ -419,7 +419,12 @@ class SmzdmTaskBot extends SmzdmBot {
 
       if (task.task_redirect_url.link_type != 'other') {
         // 模拟打开文章
-        await this.getArticleDetail(article.article_id, true);
+        if (/detail_haojia/i.task.task_redirect_url.scheme_url) {
+          await this.getHaojiaDetail(article.article_id);
+        }
+        else {
+          await this.getArticleDetail(article.article_id);
+        }
 
         $.log('等候 8 秒');
         await $.wait(8000);
@@ -469,7 +474,7 @@ class SmzdmTaskBot extends SmzdmBot {
 
       if (isRead) {
         // 模拟打开文章
-        await this.getArticleDetail(article.article_id, true);
+        await this.getArticleDetail(article.article_id);
       }
 
       $.log('延迟 15 秒模拟阅读文章');
@@ -971,7 +976,7 @@ class SmzdmTaskBot extends SmzdmBot {
   }
 
   // 获取文章详情
-  async getArticleDetail(id, isQuiet = false) {
+  async getArticleDetail(id) {
     const { isSuccess, data, response } = await requestApi(`https://article-api.smzdm.com/article_detail/${id}`, {
       headers: this.getHeaders(),
       data: {
@@ -989,9 +994,28 @@ class SmzdmTaskBot extends SmzdmBot {
       return data.data;
     }
     else {
-      if (!isQuiet) {
-        $.log(`获取文章详情失败！${response}`);
+      $.log(`获取文章详情失败！${response}`);
+
+      return false;
+    }
+  }
+
+  // 获取好价详情
+  async getHaojiaDetail(id) {
+    const { isSuccess, data, response } = await requestApi(`https://haojia-api.smzdm.com/detail/${id}`, {
+      headers: this.getHeaders(),
+      data: {
+        imgmode: 0,
+        hashcode: '',
+        h5hash: ''
       }
+    });
+
+    if (isSuccess) {
+      return data.data;
+    }
+    else {
+      $.log(`获取好价详情失败！${response}`);
 
       return false;
     }
