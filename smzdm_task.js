@@ -419,7 +419,7 @@ class SmzdmTaskBot extends SmzdmBot {
 
       if (task.task_redirect_url.link_type != 'other') {
         // 模拟打开文章
-        if (/detail_haojia/i.task.task_redirect_url.scheme_url) {
+        if (/detail_haojia/i.test(task.task_redirect_url.scheme_url)) {
           await this.getHaojiaDetail(article.article_id);
         }
         else {
