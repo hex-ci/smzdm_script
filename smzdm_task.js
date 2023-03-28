@@ -474,7 +474,12 @@ class SmzdmTaskBot extends SmzdmBot {
 
       if (isRead) {
         // 模拟打开文章
-        await this.getArticleDetail(article.article_id);
+        if (/detail_haojia/i.test(task.task_redirect_url.scheme_url)) {
+          await this.getHaojiaDetail(article.article_id);
+        }
+        else {
+          await this.getArticleDetail(article.article_id);
+        }
       }
 
       $.log('延迟 15 秒模拟阅读文章');
