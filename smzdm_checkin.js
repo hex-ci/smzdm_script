@@ -86,7 +86,15 @@ class SmzdmCheckinBot extends SmzdmBot {
 
     if (isSuccess) {
       const msg1 = `${data.data.normal_reward.reward_add.title}: ${data.data.normal_reward.reward_add.content}`;
-      const msg2 = `${data.data.normal_reward.gift.title}: ${data.data.normal_reward.gift.content_str}`;
+
+      let msg2 = '';
+
+      if (data.data.normal_reward.gift.title) {
+        msg2 = `${data.data.normal_reward.gift.title}: ${data.data.normal_reward.gift.content_str}`;
+      }
+      else {
+        msg2 = `${data.data.normal_reward.gift.content_str}: ${data.data.normal_reward.gift.sub_content}`;
+      }
 
       $.log(`${msg1}\n${msg2}\n`);
 
