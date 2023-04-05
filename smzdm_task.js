@@ -64,14 +64,14 @@ class SmzdmTaskBot extends SmzdmBot {
           await $.wait(5000);
         }
         // 抽奖任务
-        // else if (task.task_event_type == 'guide.crowd') {
-        //   const { isSuccess, msg } = await this.doCrowdTask(task);
+        else if (task.task_event_type == 'guide.crowd') {
+          const { isSuccess, msg } = await this.doCrowdTask(task);
 
-        //   notifyMsg += `${isSuccess ? '🟢' : '❌'}完成[${task.task_name}]任务${isSuccess ? '成功' : `失败！${msg || '请查看日志'}`}\n`;
+          notifyMsg += `${isSuccess ? '🟢' : '❌'}完成[${task.task_name}]任务${isSuccess ? '成功' : `失败！${msg || '请查看日志'}`}\n`;
 
-        //   $.log('等候 5 秒');
-        //   await $.wait(5000);
-        // }
+          $.log('等候 5 秒');
+          await $.wait(5000);
+        }
         // 关注用户任务
         else if (task.task_event_type == 'interactive.follow.user') {
           const { isSuccess } = await this.doFollowUserTask(task);
