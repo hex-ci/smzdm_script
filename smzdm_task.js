@@ -49,7 +49,7 @@ class SmzdmTaskBot extends SmzdmBot {
         if (task.task_event_type == 'interactive.view.article') {
           const { isSuccess } = await this.doViewTask(task);
 
-          notifyMsg += `${isSuccess ? '🟢' : '❌'}完成[${task.task_name}]任务${isSuccess ? '成功' : '失败！请查看日志'}\n`;
+          notifyMsg += this.getTaskNotifyMessage(isSuccess, task);
 
           $.log('等候 5 秒');
           await $.wait(5000);
@@ -58,7 +58,7 @@ class SmzdmTaskBot extends SmzdmBot {
         else if (task.task_event_type == 'interactive.share') {
           const { isSuccess } = await this.doShareTask(task);
 
-          notifyMsg += `${isSuccess ? '🟢' : '❌'}完成[${task.task_name}]任务${isSuccess ? '成功' : '失败！请查看日志'}\n`;
+          notifyMsg += this.getTaskNotifyMessage(isSuccess, task);
 
           $.log('等候 5 秒');
           await $.wait(5000);
@@ -68,7 +68,7 @@ class SmzdmTaskBot extends SmzdmBot {
           const { isSuccess, code } = await this.doCrowdTask(task);
 
           if (code !== 99) {
-            notifyMsg += `${isSuccess ? '🟢' : '❌'}完成[${task.task_name}]任务${isSuccess ? '成功' : `失败！请查看日志`}\n`;
+            notifyMsg += this.getTaskNotifyMessage(isSuccess, task);
           }
 
           $.log('等候 5 秒');
@@ -78,7 +78,7 @@ class SmzdmTaskBot extends SmzdmBot {
         else if (task.task_event_type == 'interactive.follow.user') {
           const { isSuccess } = await this.doFollowUserTask(task);
 
-          notifyMsg += `${isSuccess ? '🟢' : '❌'}完成[${task.task_name}]任务${isSuccess ? '成功' : '失败！请查看日志'}\n`;
+          notifyMsg += this.getTaskNotifyMessage(isSuccess, task);
 
           $.log('等候 5 秒');
           await $.wait(5000);
@@ -87,7 +87,7 @@ class SmzdmTaskBot extends SmzdmBot {
         else if (task.task_event_type == 'interactive.follow.tag') {
           const { isSuccess } = await this.doFollowTagTask(task);
 
-          notifyMsg += `${isSuccess ? '🟢' : '❌'}完成[${task.task_name}]任务${isSuccess ? '成功' : '失败！请查看日志'}\n`;
+          notifyMsg += this.getTaskNotifyMessage(isSuccess, task);
 
           $.log('等候 5 秒');
           await $.wait(5000);
@@ -96,7 +96,7 @@ class SmzdmTaskBot extends SmzdmBot {
         else if (task.task_event_type == 'interactive.follow.brand') {
           const { isSuccess } = await this.doFollowBrandTask(task);
 
-          notifyMsg += `${isSuccess ? '🟢' : '❌'}完成[${task.task_name}]任务${isSuccess ? '成功' : '失败！请查看日志'}\n`;
+          notifyMsg += this.getTaskNotifyMessage(isSuccess, task);
 
           $.log('等候 5 秒');
           await $.wait(5000);
@@ -105,7 +105,25 @@ class SmzdmTaskBot extends SmzdmBot {
         else if (task.task_event_type == 'interactive.favorite') {
           const { isSuccess } = await this.doFavoriteTask(task);
 
-          notifyMsg += `${isSuccess ? '🟢' : '❌'}完成[${task.task_name}]任务${isSuccess ? '成功' : '失败！请查看日志'}\n`;
+          notifyMsg += this.getTaskNotifyMessage(isSuccess, task);
+
+          $.log('等候 5 秒');
+          await $.wait(5000);
+        }
+        // 点赞任务
+        else if (task.task_event_type == 'interactive.rating') {
+          const { isSuccess } = await this.doRatingTask(task);
+
+          notifyMsg += this.getTaskNotifyMessage(isSuccess, task);
+
+          $.log('等候 5 秒');
+          await $.wait(5000);
+        }
+        // 评论任务
+        else if (task.task_event_type == 'interactive.comment') {
+          const { isSuccess } = await this.doCommentTask(task);
+
+          notifyMsg += this.getTaskNotifyMessage(isSuccess, task);
 
           $.log('等候 5 秒');
           await $.wait(5000);
@@ -134,13 +152,133 @@ class SmzdmTaskBot extends SmzdmBot {
     return notifyMsg || '无可执行任务';
   }
 
+  getTaskNotifyMessage(isSuccess, task) {
+    return `${isSuccess ? '🟢' : '❌'}完成[${task.task_name}]任务${isSuccess ? '成功' : '失败！请查看日志'}\n`;
+  }
+
+  // 执行评论任务
+  async doCommentTask(task) {
+    $.log(`开始任务: ${task.task_name}`);
+
+    const articles = await this.getArticleList(1);
+
+    if (articles.length < 1) {
+      return {
+        isSuccess: false
+      };
+    }
+
+    $.log('等候 3 秒');
+    await $.wait(3000);
+
+    const {isSuccess, data } = await this.submitComment({
+      articleId: articles[0].article_id,
+      channelId: articles[0].article_channel_id,
+      content: '感谢作者写的文章，阅读这篇文章后，感觉作者写的挺不错的~'
+    });
+
+    if (!isSuccess) {
+      return {
+        isSuccess
+      };
+    }
+
+    $.log('等候 5 秒');
+    await $.wait(5000);
+
+    await this.removeComment(data.data.comment_ID);
+
+    $.log('延迟 5 秒领取奖励');
+    await $.wait(5000);
+
+    return await this.receiveReward(task.task_id);
+  }
+
+  // 执行点赞任务
+  async doRatingTask(task) {
+    $.log(`开始任务: ${task.task_name}`);
+
+    let articleId = '';
+    let channelId = '';
+
+    if (task.task_redirect_url.link_type === 'lanmu') {
+      // 从栏目获取文章
+      const articles = await this.getArticleListFromLanmu(task.task_redirect_url.link_val);
+
+      if (articles.length < 1) {
+        return {
+          isSuccess: false
+        };
+      }
+
+      articleId = articles[0].article_id;
+      channelId = articles[0].article_channel_id;
+    }
+    else {
+      $.log('尚未支持');
+
+      return {
+        isSuccess: false
+      };
+    }
+
+    $.log('等候 3 秒');
+    await $.wait(3000);
+
+    await this.rating({
+      method: 'worth_cancel',
+      type: 3,
+      id: articleId,
+      channelId
+    });
+
+    $.log('等候 3 秒');
+    await $.wait(3000);
+
+    await this.rating({
+      method: 'worth_create',
+      type: 1,
+      id: articleId,
+      channelId
+    });
+
+    $.log('等候 3 秒');
+    await $.wait(3000);
+
+    await this.rating({
+      method: 'worth_cancel',
+      type: 3,
+      id: articleId,
+      channelId
+    });
+
+    $.log('延迟 5 秒领取奖励');
+    await $.wait(5000);
+
+    return await this.receiveReward(task.task_id);
+  }
+
   // 执行收藏任务
   async doFavoriteTask(task) {
     $.log(`开始任务: ${task.task_name}`);
 
     let articleId = '';
+    let channelId = '';
 
-    if (task.task_redirect_url.link_val == '0') {
+    if (task.task_redirect_url.link_type === 'lanmu') {
+      // 从栏目获取文章
+      const articles = await this.getArticleListFromLanmu(task.task_redirect_url.link_val);
+
+      if (articles.length < 1) {
+        return {
+          isSuccess: false
+        };
+      }
+
+      articleId = articles[0].article_id;
+      channelId = articles[0].article_channel_id;
+    }
+    else if (task.task_redirect_url.link_val == '0') {
       $.log('尚未支持');
 
       return {
@@ -149,15 +287,17 @@ class SmzdmTaskBot extends SmzdmBot {
     }
     else {
       articleId = task.task_redirect_url.link_val;
-    }
 
-    // 获取文章信息
-    const articleDetail = await this.getArticleDetail(articleId);
+      // 获取文章信息
+      const articleDetail = await this.getArticleDetail(articleId);
 
-    if (articleDetail === false) {
-      return {
-        isSuccess: false
-      };
+      if (articleDetail === false) {
+        return {
+          isSuccess: false
+        };
+      }
+
+      channelId = articleDetail.channel_id;
     }
 
     $.log('等候 3 秒');
@@ -166,7 +306,7 @@ class SmzdmTaskBot extends SmzdmBot {
     await this.favorite({
       method: 'destroy',
       id: articleId,
-      channelId: articleDetail.channel_id
+      channelId
     });
 
     $.log('等候 3 秒');
@@ -175,7 +315,7 @@ class SmzdmTaskBot extends SmzdmBot {
     await this.favorite({
       method: 'create',
       id: articleId,
-      channelId: articleDetail.channel_id
+      channelId
     });
 
     $.log('等候 3 秒');
@@ -184,7 +324,7 @@ class SmzdmTaskBot extends SmzdmBot {
     await this.favorite({
       method: 'destroy',
       id: articleId,
-      channelId: articleDetail.channel_id
+      channelId
     });
 
     $.log('延迟 5 秒领取奖励');
@@ -815,7 +955,7 @@ class SmzdmTaskBot extends SmzdmBot {
   }
 
   // 获取 Web 文章列表
-  async getArticleList(num) {
+  async getArticleList(num = 1) {
     const { isSuccess, data, response } = await requestApi('https://article-api.smzdm.com/ranking_list/articles', {
       headers: this.getHeaders(),
       data: {
@@ -1132,6 +1272,144 @@ class SmzdmTaskBot extends SmzdmBot {
 
       return {};
     }
+  }
+
+  // 根据栏目信息获取文章列表
+  async getArticleListFromLanmu(id, num = 1) {
+    const lanmuDetail = await this.getTagDetail(id);
+
+    if (!lanmuDetail.lanmu_id) {
+      return [];
+    }
+
+    const { isSuccess, data, response } = await requestApi('https://common-api.smzdm.com/lanmu/list_data', {
+      headers: this.getHeaders(),
+      data: {
+        price_lt: '',
+        order: '',
+        category_ids: '',
+        price_gt: '',
+        referer_article: '',
+        tag_params: '',
+        mall_ids: '',
+        time_sort: '',
+        page: 1,
+        params: id,
+        limit: 20,
+        tab_params: lanmuDetail.tab[0].params
+      }
+    });
+
+    if (isSuccess) {
+      // 取前 num 个做任务
+      return data.data.rows.slice(0, num);
+    }
+    else {
+      $.log(`获取文章列表失败: ${response}`);
+      return [];
+    }
+  }
+
+  // 点赞
+  async rating({id, channelId, method, type}) {
+    const { isSuccess, response } = await requestApi(`https://user-api.smzdm.com/rating/${method}`, {
+      method: 'post',
+      headers: this.getHeaders(),
+      data: {
+        touchstone_event: this.getTouchstoneEvent({
+          event_value: {
+            aid: id,
+            cid: channelId,
+            is_detail: true
+          },
+          sourceMode: '栏目页_热门好价',
+          sourcePage: `Android/好价/P/${id}/`,
+          upperLevel_url: '栏目页/攒机爱好者//'
+        }),
+        token: this.token,
+        id,
+        channel_id: channelId,
+        wtype: type
+      }
+    });
+
+    if (isSuccess) {
+      $.log(`${method} 点赞成功: ${id}`);
+    }
+    else {
+      $.log(`${method} 点赞失败！${response}`);
+    }
+
+    return {
+      isSuccess,
+      response
+    };
+  }
+
+  // 发表评论
+  async submitComment({ articleId, channelId, content }) {
+    const { isSuccess, data, response } = await requestApi('https://comment-api.smzdm.com/comments/submit', {
+      method: 'post',
+      headers: this.getHeaders(),
+      data: {
+        touchstone_event: this.getTouchstoneEvent({
+          event_value: {
+            aid: articleId,
+            cid: channelId,
+            is_detail: true
+          },
+          sourceMode: '好物社区_全部',
+          sourcePage: `Android/长图文/${articleId}/评论页/`,
+          upperLevel_url: '好物社区/首页/全部/',
+          sourceRoot: '社区'
+        }),
+        is_like: 3,
+        reply_from: 3,
+        smiles: 0,
+        atta: 0,
+        parentid: 0,
+        token: this.token,
+        article_id: articleId,
+        channel_id: channelId,
+        content
+      }
+    });
+
+    if (isSuccess) {
+      $.log(`评论发表成功: ${data.data.comment_ID}`);
+    }
+    else {
+      $.log(`评论发表失败！${response}`);
+    }
+
+    return {
+      isSuccess,
+      data,
+      response
+    };
+  }
+
+  // 删除评论
+  async removeComment(id) {
+    const { isSuccess, response } = await requestApi('https://comment-api.smzdm.com/comments/delete_comment', {
+      method: 'post',
+      headers: this.getHeaders(),
+      data: {
+        comment_id: id
+      }
+    });
+
+    if (isSuccess) {
+      $.log(`评论删除成功: ${id}`);
+    }
+    else {
+      $.log(`评论删除失败！${response}`);
+    }
+
+    return {
+      isSuccess,
+      response
+    };
   }
 }
 
