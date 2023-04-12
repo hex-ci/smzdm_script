@@ -121,12 +121,17 @@ class SmzdmTaskBot extends SmzdmBot {
         }
         // 评论任务
         else if (task.task_event_type == 'interactive.comment') {
-          const { isSuccess } = await this.doCommentTask(task);
+          if (process.env.SMZDM_COMMENT && String(process.env.SMZDM_COMMENT).length > 10) {
+            const { isSuccess } = await this.doCommentTask(task);
 
-          notifyMsg += this.getTaskNotifyMessage(isSuccess, task);
+            notifyMsg += this.getTaskNotifyMessage(isSuccess, task);
 
-          $.log('等候 5 秒');
-          await $.wait(5000);
+            $.log('等候 5 秒');
+            await $.wait(5000);
+          }
+          else {
+            $.log('请设置 SMZDM_COMMENT 环境变量后才能做评论任务！');
+          }
         }
       }
     }
@@ -177,7 +182,7 @@ class SmzdmTaskBot extends SmzdmBot {
     const {isSuccess, data } = await this.submitComment({
       articleId: article.article_id,
       channelId: article.article_channel_id,
-      content: '感谢作者写的文章，阅读这篇文章后，感觉作者写的挺不错的~'
+      content: process.env.SMZDM_COMMENT
     });
 
     if (!isSuccess) {
