@@ -160,7 +160,7 @@ class SmzdmTaskBot extends SmzdmBot {
   async doCommentTask(task) {
     $.log(`开始任务: ${task.task_name}`);
 
-    const articles = await this.getArticleList(1);
+    const articles = await this.getArticleList(20);
 
     if (articles.length < 1) {
       return {
@@ -168,12 +168,15 @@ class SmzdmTaskBot extends SmzdmBot {
       };
     }
 
+    // 随机选一篇文章来评论
+    const article = articles[Math.floor(Math.random() * articles.length)];
+
     $.log('等候 3 秒');
     await $.wait(3000);
 
     const {isSuccess, data } = await this.submitComment({
-      articleId: articles[0].article_id,
-      channelId: articles[0].article_channel_id,
+      articleId: article.article_id,
+      channelId: article.article_channel_id,
       content: '感谢作者写的文章，阅读这篇文章后，感觉作者写的挺不错的~'
     });
 
@@ -183,10 +186,18 @@ class SmzdmTaskBot extends SmzdmBot {
       };
     }
 
-    $.log('等候 5 秒');
-    await $.wait(5000);
+    $.log('等候 20 秒删除评论');
+    await $.wait(20000);
 
-    await this.removeComment(data.data.comment_ID);
+    const {isSuccess: result } = await this.removeComment(data.data.comment_ID);
+
+    if (!result) {
+      $.log('等候 10 秒再试一次');
+      await $.wait(10000);
+
+      // 不成功再执行一次删除
+      await this.removeComment(data.data.comment_ID);
+    }
 
     $.log('延迟 5 秒领取奖励');
     await $.wait(5000);
