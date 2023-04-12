@@ -130,7 +130,7 @@ class SmzdmTaskBot extends SmzdmBot {
             await $.wait(5000);
           }
           else {
-            $.log('请设置 SMZDM_COMMENT 环境变量后才能做评论任务！');
+            $.log('🟡请设置 SMZDM_COMMENT 环境变量后才能做评论任务！');
           }
         }
       }
