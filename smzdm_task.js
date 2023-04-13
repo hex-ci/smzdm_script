@@ -214,12 +214,11 @@ class SmzdmTaskBot extends SmzdmBot {
   async doRatingTask(task) {
     $.log(`开始任务: ${task.task_name}`);
 
-    let articleId = '';
-    let channelId = '';
+    let article;
 
     if (task.task_redirect_url.link_type === 'lanmu') {
       // 从栏目获取文章
-      const articles = await this.getArticleListFromLanmu(task.task_redirect_url.link_val);
+      const articles = await this.getArticleListFromLanmu(task.task_redirect_url.link_val, 20);
 
       if (articles.length < 1) {
         return {
@@ -227,8 +226,7 @@ class SmzdmTaskBot extends SmzdmBot {
         };
       }
 
-      articleId = articles[0].article_id;
-      channelId = articles[0].article_channel_id;
+      article = this.getOneByRandom(articles);
     }
     else {
       $.log('尚未支持');
@@ -241,32 +239,61 @@ class SmzdmTaskBot extends SmzdmBot {
     $.log('等候 3 秒');
     await $.wait(3000);
 
-    await this.rating({
-      method: 'worth_cancel',
-      type: 3,
-      id: articleId,
-      channelId
-    });
+    if (article.article_price) {
+      // 点值
+      await this.rating({
+        method: 'worth_cancel',
+        type: 3,
+        id: article.article_id,
+        channelId: article.article_channel_id
+      });
 
-    $.log('等候 3 秒');
-    await $.wait(3000);
+      $.log('等候 3 秒');
+      await $.wait(3000);
 
-    await this.rating({
-      method: 'worth_create',
-      type: 1,
-      id: articleId,
-      channelId
-    });
+      await this.rating({
+        method: 'worth_create',
+        type: 1,
+        id: article.article_id,
+        channelId: article.article_channel_id
+      });
 
-    $.log('等候 3 秒');
-    await $.wait(3000);
+      $.log('等候 3 秒');
+      await $.wait(3000);
 
-    await this.rating({
-      method: 'worth_cancel',
-      type: 3,
-      id: articleId,
-      channelId
-    });
+      await this.rating({
+        method: 'worth_cancel',
+        type: 3,
+        id: article.article_id,
+        channelId: article.article_channel_id
+      });
+    }
+    else {
+      // 点赞
+      await this.rating({
+        method: 'like_cancel',
+        id: article.article_id,
+        channelId: article.article_channel_id
+      });
+
+      $.log('等候 3 秒');
+      await $.wait(3000);
+
+      await this.rating({
+        method: 'like_create',
+        id: article.article_id,
+        channelId: article.article_channel_id
+      });
+
+      $.log('等候 3 秒');
+      await $.wait(3000);
+
+      await this.rating({
+        method: 'like_cancel',
+        id: article.article_id,
+        channelId: article.article_channel_id
+      });
+    }
 
     $.log('延迟 5 秒领取奖励');
     await $.wait(5000);
@@ -283,7 +310,7 @@ class SmzdmTaskBot extends SmzdmBot {
 
     if (task.task_redirect_url.link_type === 'lanmu') {
       // 从栏目获取文章
-      const articles = await this.getArticleListFromLanmu(task.task_redirect_url.link_val);
+      const articles = await this.getArticleListFromLanmu(task.task_redirect_url.link_val, 20);
 
       if (articles.length < 1) {
         return {
@@ -291,8 +318,10 @@ class SmzdmTaskBot extends SmzdmBot {
         };
       }
 
-      articleId = articles[0].article_id;
-      channelId = articles[0].article_channel_id;
+      const article = this.getOneByRandom(articles);
+
+      articleId = article.article_id;
+      channelId = article.article_channel_id;
     }
     else if (task.task_redirect_url.link_val == '0') {
       $.log('尚未支持');
@@ -1338,9 +1367,9 @@ class SmzdmTaskBot extends SmzdmBot {
             cid: channelId,
             is_detail: true
           },
-          sourceMode: '栏目页_热门好价',
-          sourcePage: `Android/好价/P/${id}/`,
-          upperLevel_url: '栏目页/攒机爱好者//'
+          sourceMode: '栏目页',
+          sourcePage: `Android//P/${id}/`,
+          upperLevel_url: '栏目页///'
         }),
         token: this.token,
         id,

@@ -191,6 +191,10 @@ class SmzdmBot {
       Cookie: this.androidCookie
     };
   }
+
+  getOneByRandom(listing) {
+    return listing[Math.floor(Math.random() * listing.length)];
+  }
 }
 
 module.exports = {
