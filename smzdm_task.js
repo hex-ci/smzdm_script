@@ -554,13 +554,27 @@ class SmzdmTaskBot extends SmzdmBot {
   async doCrowdTask(task) {
     $.log(`开始任务: ${task.task_name}`);
 
-    const { isSuccess, data } = await this.getFreeCrowd();
+    let { isSuccess, data } = await this.getCrowd('免费', 0);
 
     if (!isSuccess) {
-      return {
-        isSuccess,
-        code: 99
-      };
+      if (process.env.SMZDM_CROWD_SILVER_5 == 'yes') {
+        ({ isSuccess, data } = await this.getCrowd('5碎银子', 5));
+
+        if (!isSuccess) {
+          return {
+            isSuccess,
+            code: 99
+          };
+        }
+      }
+      else {
+        $.log('🟡请设置 SMZDM_CROWD_SILVER_5 环境变量值为 yes 后才能进行5碎银子抽奖！');
+
+        return {
+          isSuccess,
+          code: 99
+        };
+      }
     }
 
     $.log('等候 5 秒');
@@ -841,38 +855,46 @@ class SmzdmTaskBot extends SmzdmBot {
     };
   }
 
-  // 获取免费抽奖信息
-  async getFreeCrowd() {
+  // 获取抽奖信息
+  async getCrowd(name, price) {
     const { isSuccess, data, response } = await requestApi('https://zhiyou.smzdm.com/user/crowd/', {
       sign: false,
       parseJSON: false,
       headers: this.getHeadersForWeb()
     });
 
+    const re = new RegExp(`<button\\s+([^>]+?)>\\s+?<div\\s+[^>]+?>\\s*${name}(?:抽奖)?\\s*<\\/div>\\s+<span\\s+class="reduceNumber">-${price}<\\/span>[\\s\\S]+?<\\/button>`, 'ig');
+
     if (isSuccess) {
-      const match = data.match(/<button\s+([^>]+?)>\s+?<div\s+[^>]+?>\s*免费抽奖\s*<\/div>\s+<span\s+class="reduceNumber">-0<\/span>[\s\S]+?<\/button>/i);
+      const crowds = [];
+      let match;
 
-      if (match) {
-        const matchCrowd = match[1].match(/data-crowd_id="(\d+)"/i);
+      while ((match = re.exec(data)) !== null) {
+        crowds.push(match[1]);
+      }
 
-        if (matchCrowd) {
-          $.log(`免费抽奖ID: ${matchCrowd[1]}`);
+      if (crowds.length < 1) {
+        $.log(`未找到${name}抽奖`);
 
-          return {
-            isSuccess: true,
-            data: matchCrowd[1]
-          };
-        }
-        else {
-          $.log(`未找到免费抽奖ID`);
+        return {
+          isSuccess: false
+        };
+      }
 
-          return {
-            isSuccess: false
-          };
-        }
+      const crowd = this.getOneByRandom(crowds);
+
+      const matchCrowd = crowd.match(/data-crowd_id="(\d+)"/i);
+
+      if (matchCrowd) {
+        $.log(`${name}抽奖ID: ${matchCrowd[1]}`);
+
+        return {
+          isSuccess: true,
+          data: matchCrowd[1]
+        };
       }
       else {
-        $.log(`未找到免费抽奖`);
+        $.log(`未找到${name}抽奖ID`);
 
         return {
           isSuccess: false
@@ -880,7 +902,7 @@ class SmzdmTaskBot extends SmzdmBot {
       }
     }
     else {
-      $.log(`获取免费抽奖失败: ${response}`);
+      $.log(`获取${name}抽奖失败: ${response}`);
 
       return {
         isSuccess: false
