@@ -1,5 +1,5 @@
 /*
-什么值得买签到脚本
+smzdm 签到脚本
 项目地址: https://github.com/hex-ci/smzdm_script
 
 cron: 10 8 * * *
@@ -11,7 +11,7 @@ const notify = require('./sendNotify');
 
 // ------------------------------------
 
-const $ = new Env('什么值得买签到');
+const $ = new Env('smzdm 签到');
 
 class SmzdmCheckinBot extends SmzdmBot {
   constructor(cookie, sk) {

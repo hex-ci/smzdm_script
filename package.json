@@ -1,7 +1,7 @@
 {
   "name": "smzdm-script",
   "version": "1.0.0",
-  "description": "什么值得买自用脚本 for 青龙面板，支持 App 端签到、转盘抽奖、每日任务等功能",
+  "description": "smzdm 自用脚本 for 青龙面板，支持 App 端签到、转盘抽奖、每日任务等功能",
   "main": "smzdm_checkin.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"

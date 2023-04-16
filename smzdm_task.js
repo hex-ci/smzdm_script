@@ -1,5 +1,5 @@
 /*
-什么值得买任务脚本
+smzdm 任务脚本
 项目地址: https://github.com/hex-ci/smzdm_script
 
 cron: 20 14 * * *
@@ -11,7 +11,7 @@ const notify = require('./sendNotify');
 
 // ------------------------------------
 
-const $ = new Env('什么值得买任务');
+const $ = new Env('smzdm 任务');
 
 class SmzdmTaskBot extends SmzdmBot {
   constructor(cookie) {
