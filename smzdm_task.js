@@ -881,7 +881,23 @@ class SmzdmTaskBot extends SmzdmBot {
         };
       }
 
-      const crowd = this.getOneByRandom(crowds);
+      let crowd;
+
+      if (price > 0 && process.env.SMZDM_CROWD_KEYWORD) {
+        crowd = crowds.find((item) => {
+          const match = item.match(/data-title="([^"]+)"/i);
+
+          return (match && match[1].indexOf(process.env.SMZDM_CROWD_KEYWORD) >= 0);
+        });
+
+        if (!crowd) {
+          $.log('未找到符合关键词的抽奖，执行随机选取');
+          crowd = this.getOneByRandom(crowds);
+        }
+      }
+      else {
+        crowd = this.getOneByRandom(crowds);
+      }
 
       const matchCrowd = crowd.match(/data-crowd_id="(\d+)"/i);
 
