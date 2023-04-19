@@ -228,6 +228,18 @@ class SmzdmTaskBot extends SmzdmBot {
 
       article = this.getOneByRandom(articles);
     }
+    else if (task.task_redirect_url.link_val == '0' || !task.task_redirect_url.link_val) {
+      // 随机选一篇文章
+      const articles = await this.getArticleList(20);
+
+      if (articles.length < 1) {
+        return {
+          isSuccess: false
+        };
+      }
+
+      article = this.getOneByRandom(articles);
+    }
     else {
       $.log('尚未支持');
 
@@ -323,12 +335,20 @@ class SmzdmTaskBot extends SmzdmBot {
       articleId = article.article_id;
       channelId = article.article_channel_id;
     }
-    else if (task.task_redirect_url.link_val == '0') {
-      $.log('尚未支持');
+    else if (task.task_redirect_url.link_val == '0' || !task.task_redirect_url.link_val) {
+      // 随机选一篇文章
+      const articles = await this.getArticleList(20);
 
-      return {
-        isSuccess: false
-      };
+      if (articles.length < 1) {
+        return {
+          isSuccess: false
+        };
+      }
+
+      const article = this.getOneByRandom(articles);
+
+      articleId = article.article_id;
+      channelId = article.article_channel_id;
     }
     else {
       articleId = task.task_redirect_url.link_val;
@@ -1037,7 +1057,7 @@ class SmzdmTaskBot extends SmzdmBot {
     }
   }
 
-  // 获取 Web 文章列表
+  // 获取文章列表
   async getArticleList(num = 1) {
     const { isSuccess, data, response } = await requestApi('https://article-api.smzdm.com/ranking_list/articles', {
       headers: this.getHeaders(),
