@@ -216,9 +216,9 @@ class SmzdmTaskBot extends SmzdmBot {
 
     let article;
 
-    if (task.task_redirect_url.link_type === 'lanmu') {
-      // 从栏目获取文章
-      const articles = await this.getArticleListFromLanmu(task.task_redirect_url.link_val, 20);
+    if (task.task_description.indexOf('任意') >= 0 || task.task_redirect_url.link_val == '0' || !task.task_redirect_url.link_val) {
+      // 随机选一篇文章
+      const articles = await this.getArticleList(20);
 
       if (articles.length < 1) {
         return {
@@ -228,9 +228,9 @@ class SmzdmTaskBot extends SmzdmBot {
 
       article = this.getOneByRandom(articles);
     }
-    else if (task.task_redirect_url.link_val == '0' || !task.task_redirect_url.link_val) {
-      // 随机选一篇文章
-      const articles = await this.getArticleList(20);
+    else if (task.task_redirect_url.link_type === 'lanmu') {
+      // 从栏目获取文章
+      const articles = await this.getArticleListFromLanmu(task.task_redirect_url.link_val, 20);
 
       if (articles.length < 1) {
         return {
