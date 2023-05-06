@@ -76,7 +76,20 @@ const requestApi = async (url, inputOptions = {}) => {
 
   const gotOptions = {
     method: options.method.toUpperCase(),
-    headers: options.headers
+    headers: options.headers,
+    retry: {
+      limit: 2,
+      methods: [
+        'GET',
+        'POST'
+      ],
+      statusCodes: [
+      ],
+      errorCodes: [
+        'ECONNRESET',
+        'EAI_AGAIN'
+      ]
+    }
   };
 
   if (options.method === 'get') {

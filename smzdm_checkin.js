@@ -93,7 +93,7 @@ class SmzdmCheckinBot extends SmzdmBot {
         msg2 = `${data.data.normal_reward.gift.title}: ${data.data.normal_reward.gift.content_str}`;
       }
       else {
-        msg2 = `${data.data.normal_reward.gift.content_str}: ${data.data.normal_reward.gift.sub_content}`;
+        msg2 = `${data.data.normal_reward.gift.sub_content}`;
       }
 
       $.log(`${msg1}\n${msg2}\n`);
