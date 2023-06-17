@@ -336,7 +336,7 @@ class SmzdmTaskBot extends SmzdmBot {
       channelId = article.article_channel_id;
     }
     else if (task.task_redirect_url.link_type === 'tag') {
-      // 从栏目获取文章
+      // 从 Tag 获取文章
       const articles = await this.getArticleListFromTag(task.task_redirect_url.link_val, task.task_redirect_url.link_title, 20);
 
       if (articles.length < 1) {
