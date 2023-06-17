@@ -335,6 +335,21 @@ class SmzdmTaskBot extends SmzdmBot {
       articleId = article.article_id;
       channelId = article.article_channel_id;
     }
+    if (task.task_redirect_url.link_type === 'tag') {
+      // 从栏目获取文章
+      const articles = await this.getArticleListFromTag(task.task_redirect_url.link_val, task.task_redirect_url.link_title, 20);
+
+      if (articles.length < 1) {
+        return {
+          isSuccess: false
+        };
+      }
+
+      const article = this.getOneByRandom(articles);
+
+      articleId = article.article_id;
+      channelId = article.article_channel_id;
+    }
     else if (task.task_redirect_url.link_val == '0' || !task.task_redirect_url.link_val) {
       // 随机选一篇文章
       const articles = await this.getArticleList(20);
@@ -1513,6 +1528,58 @@ class SmzdmTaskBot extends SmzdmBot {
       isSuccess,
       response
     };
+  }
+
+  // 获取 Dingyue 状态
+  async getDingyueStatus(name) {
+    const { isSuccess, data, response } = await requestApi('https://dingyue-api.smzdm.com/dingyue/follow_status', {
+      method: 'post',
+      headers: this.getHeaders(),
+      data: {
+        rules: JSON.stringify([{
+          type: 'tag',
+          keyword: name
+        }])
+      }
+    });
+
+    if (isSuccess) {
+      return data;
+    }
+    else {
+      $.log(`获取订阅状态失败: ${response}`);
+      return {};
+    }
+  }
+
+  // 根据 Tag ID 获取文章列表
+  async getArticleListFromTag(id, name, num = 1) {
+    const status = this.getDingyueStatus(name);
+
+    const { isSuccess, data, response } = await requestApi('https://tag-api.smzdm.com/theme/detail_feed', {
+      headers: this.getHeaders(),
+      data: {
+        article_source: 1,
+        past_num: 0,
+        feed_sort: 2,
+        smzdm_id: status.smzdm_id,
+        tag_id: id,
+        name,
+        time_sort: 0,
+        page: 1,
+        article_tab: 0,
+        limit: 20
+      }
+    });
+
+    if (isSuccess) {
+      // 取前 num 个做任务
+      return data.data.rows.slice(0, num);
+    }
+    else {
+      $.log(`获取文章列表失败: ${response}`);
+      return [];
+    }
   }
 }
 
