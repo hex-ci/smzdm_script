@@ -6,7 +6,7 @@ cron: 20 14 * * *
 */
 
 const Env = require('./env');
-const { SmzdmBot, requestApi, removeTags, getEnvCookies } = require('./bot');
+const { SmzdmBot, requestApi, removeTags, getEnvCookies, wait } = require('./bot');
 const notify = require('./sendNotify');
 
 // ------------------------------------
@@ -24,8 +24,7 @@ class SmzdmTaskBot extends SmzdmBot {
 
     const { tasks } = await this.getTaskList();
 
-    $.log('等候 5 秒');
-    await $.wait(5000);
+    await wait(5, 10);
 
     let notifyMsg = '';
 
@@ -40,8 +39,7 @@ class SmzdmTaskBot extends SmzdmBot {
 
         notifyMsg += `${isSuccess ? '🟢' : '❌'}领取[${task.task_name}]奖励${isSuccess ? '成功' : '失败！请查看日志'}\n`;
 
-        $.log('等候 5 秒');
-        await $.wait(5000);
+        await wait(5, 15);
       }
       // 未完成任务
       else if (task.task_status == '2') {
@@ -51,8 +49,7 @@ class SmzdmTaskBot extends SmzdmBot {
 
           notifyMsg += this.getTaskNotifyMessage(isSuccess, task);
 
-          $.log('等候 5 秒');
-          await $.wait(5000);
+          await wait(5, 15);
         }
         // 分享任务
         else if (task.task_event_type == 'interactive.share') {
@@ -60,8 +57,7 @@ class SmzdmTaskBot extends SmzdmBot {
 
           notifyMsg += this.getTaskNotifyMessage(isSuccess, task);
 
-          $.log('等候 5 秒');
-          await $.wait(5000);
+          await wait(5, 15);
         }
         // 抽奖任务
         else if (task.task_event_type == 'guide.crowd') {
@@ -71,8 +67,7 @@ class SmzdmTaskBot extends SmzdmBot {
             notifyMsg += this.getTaskNotifyMessage(isSuccess, task);
           }
 
-          $.log('等候 5 秒');
-          await $.wait(5000);
+          await wait(5, 15);
         }
         // 关注用户任务
         else if (task.task_event_type == 'interactive.follow.user') {
@@ -80,8 +75,7 @@ class SmzdmTaskBot extends SmzdmBot {
 
           notifyMsg += this.getTaskNotifyMessage(isSuccess, task);
 
-          $.log('等候 5 秒');
-          await $.wait(5000);
+          await wait(5, 15);
         }
         // 关注栏目任务
         else if (task.task_event_type == 'interactive.follow.tag') {
@@ -89,8 +83,7 @@ class SmzdmTaskBot extends SmzdmBot {
 
           notifyMsg += this.getTaskNotifyMessage(isSuccess, task);
 
-          $.log('等候 5 秒');
-          await $.wait(5000);
+          await wait(5, 15);
         }
         // 关注品牌
         else if (task.task_event_type == 'interactive.follow.brand') {
@@ -98,8 +91,7 @@ class SmzdmTaskBot extends SmzdmBot {
 
           notifyMsg += this.getTaskNotifyMessage(isSuccess, task);
 
-          $.log('等候 5 秒');
-          await $.wait(5000);
+          await wait(5, 15);
         }
         // 收藏任务
         else if (task.task_event_type == 'interactive.favorite') {
@@ -107,8 +99,7 @@ class SmzdmTaskBot extends SmzdmBot {
 
           notifyMsg += this.getTaskNotifyMessage(isSuccess, task);
 
-          $.log('等候 5 秒');
-          await $.wait(5000);
+          await wait(5, 15);
         }
         // 点赞任务
         else if (task.task_event_type == 'interactive.rating') {
@@ -116,8 +107,7 @@ class SmzdmTaskBot extends SmzdmBot {
 
           notifyMsg += this.getTaskNotifyMessage(isSuccess, task);
 
-          $.log('等候 5 秒');
-          await $.wait(5000);
+          await wait(5, 15);
         }
         // 评论任务
         else if (task.task_event_type == 'interactive.comment') {
@@ -126,8 +116,7 @@ class SmzdmTaskBot extends SmzdmBot {
 
             notifyMsg += this.getTaskNotifyMessage(isSuccess, task);
 
-            $.log('等候 5 秒');
-            await $.wait(5000);
+            await wait(5, 15);
           }
           else {
             $.log('🟡请设置 SMZDM_COMMENT 环境变量后才能做评论任务！');
@@ -136,15 +125,15 @@ class SmzdmTaskBot extends SmzdmBot {
       }
     }
 
-    $.log('等候 5 秒查询是否有限时累计活动阶段奖励');
-    await $.wait(5000);
+    $.log('查询是否有限时累计活动阶段奖励');
+    await wait(5, 15);
 
     // 领取活动奖励
     const { detail } = await this.getTaskList();
 
     if (detail.cell_data && detail.cell_data.activity_reward_status == '1') {
-      $.log('有奖励，等候 3 秒领取奖励');
-      await $.wait(5000);
+      $.log('有奖励，领取奖励');
+      await wait(5, 15);
 
       const { isSuccess } = await this.receiveActivity(detail.cell_data);
 
@@ -176,8 +165,7 @@ class SmzdmTaskBot extends SmzdmBot {
     // 随机选一篇文章来评论
     const article = articles[Math.floor(Math.random() * articles.length)];
 
-    $.log('等候 3 秒');
-    await $.wait(3000);
+    await wait(3, 10);
 
     const {isSuccess, data } = await this.submitComment({
       articleId: article.article_id,
@@ -191,21 +179,21 @@ class SmzdmTaskBot extends SmzdmBot {
       };
     }
 
-    $.log('等候 20 秒删除评论');
-    await $.wait(20000);
+    $.log('删除评论');
+    await wait(20, 30);
 
     const {isSuccess: result } = await this.removeComment(data.data.comment_ID);
 
     if (!result) {
-      $.log('等候 10 秒再试一次');
-      await $.wait(10000);
+      $.log('再试一次');
+      await wait(10, 20);
 
       // 不成功再执行一次删除
       await this.removeComment(data.data.comment_ID);
     }
 
-    $.log('延迟 5 秒领取奖励');
-    await $.wait(5000);
+    $.log('领取奖励');
+    await wait(5, 15);
 
     return await this.receiveReward(task.task_id);
   }
@@ -248,8 +236,7 @@ class SmzdmTaskBot extends SmzdmBot {
       };
     }
 
-    $.log('等候 3 秒');
-    await $.wait(3000);
+    await wait(3, 10);
 
     if (article.article_price) {
       // 点值
@@ -260,8 +247,7 @@ class SmzdmTaskBot extends SmzdmBot {
         channelId: article.article_channel_id
       });
 
-      $.log('等候 3 秒');
-      await $.wait(3000);
+      await wait(3, 10);
 
       await this.rating({
         method: 'worth_create',
@@ -270,8 +256,7 @@ class SmzdmTaskBot extends SmzdmBot {
         channelId: article.article_channel_id
       });
 
-      $.log('等候 3 秒');
-      await $.wait(3000);
+      await wait(3, 10);
 
       await this.rating({
         method: 'worth_cancel',
@@ -288,8 +273,7 @@ class SmzdmTaskBot extends SmzdmBot {
         channelId: article.article_channel_id
       });
 
-      $.log('等候 3 秒');
-      await $.wait(3000);
+      await wait(3, 10);
 
       await this.rating({
         method: 'like_create',
@@ -297,8 +281,7 @@ class SmzdmTaskBot extends SmzdmBot {
         channelId: article.article_channel_id
       });
 
-      $.log('等候 3 秒');
-      await $.wait(3000);
+      await wait(3, 10);
 
       await this.rating({
         method: 'like_cancel',
@@ -307,8 +290,8 @@ class SmzdmTaskBot extends SmzdmBot {
       });
     }
 
-    $.log('延迟 5 秒领取奖励');
-    await $.wait(5000);
+    $.log('领取奖励');
+    await wait(5, 15);
 
     return await this.receiveReward(task.task_id);
   }
@@ -380,8 +363,7 @@ class SmzdmTaskBot extends SmzdmBot {
       channelId = articleDetail.channel_id;
     }
 
-    $.log('等候 3 秒');
-    await $.wait(3000);
+    await wait(3, 10);
 
     await this.favorite({
       method: 'destroy',
@@ -389,8 +371,7 @@ class SmzdmTaskBot extends SmzdmBot {
       channelId
     });
 
-    $.log('等候 3 秒');
-    await $.wait(3000);
+    await wait(3, 10);
 
     await this.favorite({
       method: 'create',
@@ -398,8 +379,7 @@ class SmzdmTaskBot extends SmzdmBot {
       channelId
     });
 
-    $.log('等候 3 秒');
-    await $.wait(3000);
+    await wait(3, 10);
 
     await this.favorite({
       method: 'destroy',
@@ -407,8 +387,8 @@ class SmzdmTaskBot extends SmzdmBot {
       channelId
     });
 
-    $.log('延迟 5 秒领取奖励');
-    await $.wait(5000);
+    $.log('领取奖励');
+    await wait(5, 15);
 
     return await this.receiveReward(task.task_id);
   }
@@ -426,8 +406,7 @@ class SmzdmTaskBot extends SmzdmBot {
       };
     }
 
-    $.log('等候 3 秒');
-    await $.wait(3000);
+    await wait(3, 10);
 
     for (let i = 0; i < Number(task.task_even_num - task.task_finished_num); i++) {
       if (user.is_follow == '1') {
@@ -437,8 +416,7 @@ class SmzdmTaskBot extends SmzdmBot {
           keyword: user.keyword
         });
 
-        $.log('等候 5 秒');
-        await $.wait(3000);
+        await wait(3, 10);
       }
 
       await this.follow({
@@ -447,8 +425,7 @@ class SmzdmTaskBot extends SmzdmBot {
         keyword: user.keyword
       });
 
-      $.log('等候 3 秒');
-      await $.wait(3000);
+      await wait(3, 10);
 
       if (user.is_follow == '0') {
         await this.follow({
@@ -458,12 +435,11 @@ class SmzdmTaskBot extends SmzdmBot {
         });
       }
 
-      $.log('等候 5 秒');
-      await $.wait(3000);
+      await wait(3, 10);
     }
 
-    $.log('延迟 5 秒领取奖励');
-    await $.wait(5000);
+    $.log('领取奖励');
+    await wait(5, 15);
 
     return await this.receiveReward(task.task_id);
   }
@@ -485,8 +461,7 @@ class SmzdmTaskBot extends SmzdmBot {
 
       lanmuId = tag.lanmu_id;
 
-      $.log('等候 3 秒');
-      await $.wait(3000);
+      await wait(3, 10);
     }
     else {
       lanmuId = task.task_redirect_url.link_val;
@@ -503,8 +478,7 @@ class SmzdmTaskBot extends SmzdmBot {
       };
     }
 
-    $.log('等候 3 秒');
-    await $.wait(3000);
+    await wait(3, 10);
 
     await this.follow({
       method: 'destroy',
@@ -513,8 +487,7 @@ class SmzdmTaskBot extends SmzdmBot {
       keyword: tagDetail.lanmu_info.lanmu_name
     });
 
-    $.log('等候 3 秒');
-    await $.wait(3000);
+    await wait(3, 10);
 
     await this.follow({
       method: 'create',
@@ -523,8 +496,7 @@ class SmzdmTaskBot extends SmzdmBot {
       keyword: tagDetail.lanmu_info.lanmu_name
     });
 
-    $.log('等候 3 秒');
-    await $.wait(3000);
+    await wait(3, 10);
 
     await this.follow({
       method: 'destroy',
@@ -533,8 +505,8 @@ class SmzdmTaskBot extends SmzdmBot {
       keyword: tagDetail.lanmu_info.lanmu_name
     });
 
-    $.log('延迟 5 秒领取奖励');
-    await $.wait(5000);
+    $.log('领取奖励');
+    await wait(5, 15);
 
     return await this.receiveReward(task.task_id);
   }
@@ -552,8 +524,7 @@ class SmzdmTaskBot extends SmzdmBot {
       };
     }
 
-    $.log('等候 3 秒');
-    await $.wait(3000);
+    await wait(3, 10);
 
     await this.followBrand({
       method: 'dingyue_lanmu_del',
@@ -561,8 +532,7 @@ class SmzdmTaskBot extends SmzdmBot {
       keyword: brandDetail.title
     });
 
-    $.log('等候 3 秒');
-    await $.wait(3000);
+    await wait(3, 10);
 
     await this.followBrand({
       method: 'dingyue_lanmu_add',
@@ -570,8 +540,7 @@ class SmzdmTaskBot extends SmzdmBot {
       keyword: brandDetail.title
     });
 
-    $.log('等候 3 秒');
-    await $.wait(3000);
+    await wait(3, 10);
 
     await this.followBrand({
       method: 'dingyue_lanmu_del',
@@ -579,8 +548,8 @@ class SmzdmTaskBot extends SmzdmBot {
       keyword: brandDetail.title
     });
 
-    $.log('延迟 5 秒领取奖励');
-    await $.wait(5000);
+    $.log('领取奖励');
+    await wait(5, 15);
 
     return await this.receiveReward(task.task_id);
   }
@@ -612,8 +581,7 @@ class SmzdmTaskBot extends SmzdmBot {
       }
     }
 
-    $.log('等候 5 秒');
-    await $.wait(5000);
+    await wait(5, 15);
 
     const result = await this.joinCrowd(data);
 
@@ -623,8 +591,8 @@ class SmzdmTaskBot extends SmzdmBot {
       };
     }
 
-    $.log('延迟 5 秒领取奖励');
-    await $.wait(5000);
+    $.log('领取奖励');
+    await wait(5, 15);
 
     return await this.receiveReward(task.task_id);
   }
@@ -638,8 +606,7 @@ class SmzdmTaskBot extends SmzdmBot {
     if (task.article_id == '0') {
       articles = await this.getArticleList(task.task_even_num - task.task_finished_num);
 
-      $.log('等候 3 秒');
-      await $.wait(3000);
+      await wait(3, 10);
     }
     else {
       articles = [{
@@ -662,20 +629,18 @@ class SmzdmTaskBot extends SmzdmBot {
           await this.getArticleDetail(article.article_id);
         }
 
-        $.log('等候 8 秒');
-        await $.wait(8000);
+        await wait(8, 20);
       }
 
       await this.shareArticleDone(article.article_id, article.article_channel_id);
       await this.shareDailyReward(article.article_channel_id);
       await this.shareCallback(article.article_id, article.article_channel_id);
 
-      $.log('等候 5 秒');
-      await $.wait(5000);
+      await wait(5, 15);
     }
 
-    $.log('延迟 3 秒领取奖励');
-    await $.wait(3000);
+    $.log('领取奖励');
+    await wait(3, 10);
 
     return await this.receiveReward(task.task_id);
   }
@@ -691,8 +656,7 @@ class SmzdmTaskBot extends SmzdmBot {
       isRead = true;
       articles = await this.getArticleList(task.task_even_num - task.task_finished_num);
 
-      $.log('等候 3 秒');
-      await $.wait(3000);
+      await wait(3, 10);
     }
     else {
       articles = [{
@@ -718,8 +682,8 @@ class SmzdmTaskBot extends SmzdmBot {
         }
       }
 
-      $.log('延迟 15 秒模拟阅读文章');
-      await $.wait(15000);
+      $.log('模拟阅读文章');
+      await wait(20, 50);
 
       const { isSuccess, response } = await requestApi('https://user-api.smzdm.com/task/event_view_article_sync', {
         method: 'post',
@@ -738,12 +702,11 @@ class SmzdmTaskBot extends SmzdmBot {
         $.log(`完成阅读失败！${response}`);
       }
 
-      $.log('等候 5 秒');
-      await $.wait(5000);
+      await wait(5, 15);
     }
 
-    $.log('延迟 3 秒领取奖励');
-    await $.wait(3000);
+    $.log('领取奖励');
+    await wait(3, 10);
 
     return await this.receiveReward(task.task_id);
   }
@@ -1602,8 +1565,9 @@ class SmzdmTaskBot extends SmzdmBot {
     }
 
     if (i > 0) {
-      $.log('\n延迟 10 秒执行\n');
-      await $.wait(10000);
+      $.log();
+      await wait(10, 30);
+      $.log();
     }
 
     const sep = `\n****** 账号${i + 1} ******\n`;

@@ -161,6 +161,21 @@ const getEnvCookies = () => {
   return cookies[0] ? cookies : false;
 };
 
+const randomDecimal = (min, max, decimal) => {
+  const rand = Math.random() * (max - min + 1) + min;
+
+  return Math.floor(rand * decimal) / decimal;
+};
+
+const wait = (minSecond, maxSecond) => {
+  // 生成随机小数秒数
+  const randomSecond = randomDecimal(minSecond, maxSecond, 1000);
+
+  console.log(`等候 ${minSecond}-${maxSecond}(${randomSecond}) 秒`);
+
+  return new Promise(resolve => setTimeout(resolve, randomSecond * 1000));
+};
+
 // ------------------------------------
 
 class SmzdmBot {
@@ -215,5 +230,6 @@ module.exports = {
   requestApi,
   removeTags,
   parseJSON,
-  getEnvCookies
+  getEnvCookies,
+  wait
 };

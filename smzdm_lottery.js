@@ -6,7 +6,7 @@ cron: 20 8 * * *
 */
 
 const Env = require('./env');
-const { SmzdmBot, requestApi, parseJSON, getEnvCookies } = require('./bot');
+const { SmzdmBot, requestApi, parseJSON, getEnvCookies, wait } = require('./bot');
 const notify = require('./sendNotify');
 
 // ------------------------------------
@@ -24,22 +24,21 @@ class SmzdmLotteryBot extends SmzdmBot {
     const lifeId = await this.getActivityIdFromLife();
 
     if (lifeId) {
-      $.log('等候 3 秒');
-      await $.wait(3000);
+      await wait(3, 10);
 
       notifyMsg += `转盘抽奖ID: ${lifeId}\n`;
       notifyMsg += await this.draw(lifeId);
       notifyMsg += '\n\n';
     }
 
-    $.log('\n等候 5 秒\n');
-    await $.wait(5000);
+    $.log();
+    await wait(5, 15);
+    $.log();
 
     const vipId = await this.getActivityIdFromVip();
 
     if (vipId) {
-      $.log('等候 3 秒');
-      await $.wait(3000);
+      await wait(3, 10);
 
       notifyMsg += `转盘抽奖ID: ${vipId}\n`;
       notifyMsg += await this.draw(vipId);
@@ -177,8 +176,9 @@ class SmzdmLotteryBot extends SmzdmBot {
     }
 
     if (i > 0) {
-      $.log('\n延迟 10 秒执行\n');
-      await $.wait(10000);
+      $.log();
+      await wait(10, 30);
+      $.log();
     }
 
     const sep = `\n****** 账号${i + 1} ******\n`;

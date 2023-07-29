@@ -6,7 +6,7 @@ cron: 10 8 * * *
 */
 
 const Env = require('./env');
-const { SmzdmBot, requestApi, removeTags, getEnvCookies } = require('./bot');
+const { SmzdmBot, requestApi, removeTags, getEnvCookies, wait } = require('./bot');
 const notify = require('./sendNotify');
 
 // ------------------------------------
@@ -48,8 +48,7 @@ class SmzdmCheckinBot extends SmzdmBot {
 🏅碎银: ${data.data.pre_re_silver}
 🏅补签卡: ${data.data.cards}`;
 
-      $.log('等候 3 秒获取信息\n');
-      await $.wait(3000);
+      await wait(3, 10);
 
       const vip = await this.getVipInfo();
 
@@ -129,8 +128,7 @@ class SmzdmCheckinBot extends SmzdmBot {
       };
     }
 
-    $.log('等候 5 秒');
-    await $.wait(5000);
+    await wait(5, 10);
 
     const { isSuccess, data, response } = await requestApi('https://user-api.smzdm.com/checkin/extra_reward', {
       method: 'post',
@@ -230,8 +228,7 @@ class SmzdmCheckinBot extends SmzdmBot {
     const sk = sks[i];
 
     if (i > 0) {
-      $.log('\n延迟 10 秒执行\n');
-      await $.wait(10000);
+      await wait(10, 30);
     }
 
     const sep = `\n****** 账号${i + 1} ******\n`;
