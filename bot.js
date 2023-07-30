@@ -6,12 +6,15 @@ const got = require('got');
 const APP_VERSION = '10.4.26';
 const APP_VERSION_REV = '866';
 
-const DEFAULT_USER_AGENT = `smzdm_android_V${APP_VERSION} rv:${APP_VERSION_REV} (Redmi Note 3;Android10.0;zh)smzdmapp`;
-const DEFAULT_WEB_USER_AGENT = `Mozilla/5.0 (Linux; Android 10.0; Redmi Build/Redmi Note 3; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/95.0.4638.74 Mobile Safari/537.36 smzdm_android_V${APP_VERSION} rv:${APP_VERSION_REV} (Redmi;Android10.0;zh) jsbv_1.0.0 webv_2.0 smzdmapp`;
+const DEFAULT_USER_AGENT_APP = `smzdm_android_V${APP_VERSION} rv:${APP_VERSION_REV} (Redmi Note 3;Android10.0;zh)smzdmapp`;
+const DEFAULT_USER_AGENT_WEB = `Mozilla/5.0 (Linux; Android 10.0; Redmi Build/Redmi Note 3; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/95.0.4638.74 Mobile Safari/537.36 smzdm_android_V${APP_VERSION} rv:${APP_VERSION_REV} (Redmi;Android10.0;zh) jsbv_1.0.0 webv_2.0 smzdmapp`;
 
 const SIGN_KEY = 'apr1$AwP!wRRT$gJ/q.X24poeBInlUJC';
 
 // ------------------------------------
+
+const reVersion = /(smzdm_android_V|smzdm\s|iphone_smzdmapp\/)([\d.]+)/i;
+const reRev = /rv:([\d.]+)/i;
 
 const randomStr = (len = 18) => {
   const char = '0123456789';
@@ -200,22 +203,38 @@ class SmzdmBot {
   }
 
   getHeaders() {
+    let userAgent = DEFAULT_USER_AGENT_APP;
+
+    if (process.env.SMZDM_USER_AGENT_APP) {
+      userAgent = process.env.SMZDM_USER_AGENT_APP
+        .replace(reVersion, `$1${APP_VERSION}`)
+        .replace(reRev, `rv:${APP_VERSION_REV}`);
+    }
+
     return {
       Accept: '*/*',
       'Accept-Language': 'zh-Hans-CN;q=1',
       'Accept-Encoding': 'gzip',
       'request_key': randomStr(18),
-      'User-Agent': DEFAULT_USER_AGENT,
+      'User-Agent': userAgent,
       Cookie: this.androidCookie
     };
   }
 
   getHeadersForWeb() {
+    let userAgent = DEFAULT_USER_AGENT_WEB;
+
+    if (process.env.SMZDM_USER_AGENT_WEB) {
+      userAgent = process.env.SMZDM_USER_AGENT_WEB
+        .replace(reVersion, `$1${APP_VERSION}`)
+        .replace(reRev, `rv:${APP_VERSION_REV}`);
+    }
+
     return {
       Accept: '*/*',
       'Accept-Language': 'zh-CN,zh-Hans;q=0.9',
       'Accept-Encoding': 'gzip',
-      'User-Agent': DEFAULT_WEB_USER_AGENT,
+      'User-Agent': userAgent,
       Cookie: this.androidCookie
     };
   }
