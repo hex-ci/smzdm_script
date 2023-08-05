@@ -21,27 +21,36 @@ class SmzdmLotteryBot extends SmzdmBot {
   async run() {
     let notifyMsg = '';
 
-    const lifeId = await this.getActivityIdFromLife();
+    // const lifeId = await this.getActivityIdFromLife();
 
-    if (lifeId) {
+    // if (lifeId) {
+    //   await wait(3, 10);
+
+    //   notifyMsg += `转盘抽奖ID: ${lifeId}\n`;
+    //   notifyMsg += await this.draw(lifeId);
+    //   notifyMsg += '\n\n';
+    // }
+
+    const vipId1 = await this.getActivityIdFromVip('https://m.smzdm.com/topic/bwrzf5/516lft');
+
+    if (vipId1) {
       await wait(3, 10);
 
-      notifyMsg += `转盘抽奖ID: ${lifeId}\n`;
-      notifyMsg += await this.draw(lifeId);
-      notifyMsg += '\n\n';
+      notifyMsg += `转盘抽奖ID: ${vipId1}\n`;
+      notifyMsg += await this.draw(vipId1);
     }
 
     $.log();
     await wait(5, 15);
     $.log();
 
-    const vipId = await this.getActivityIdFromVip();
+    const vipId2 = await this.getActivityIdFromVip('https://m.smzdm.com/topic/zhyzhuanpan/cjzp/');
 
-    if (vipId) {
+    if (vipId2) {
       await wait(3, 10);
 
-      notifyMsg += `转盘抽奖ID: ${vipId}\n`;
-      notifyMsg += await this.draw(vipId);
+      notifyMsg += `转盘抽奖ID: ${vipId2}\n`;
+      notifyMsg += await this.draw(vipId2);
     }
 
     return notifyMsg;
@@ -125,8 +134,8 @@ class SmzdmLotteryBot extends SmzdmBot {
   }
 
   // 获取会员中心转盘抽奖ID
-  async getActivityIdFromVip() {
-    const { isSuccess, data, response } = await requestApi('https://m.smzdm.com/topic/zhyzhuanpan/cjzp/', {
+  async getActivityIdFromVip(url) {
+    const { isSuccess, data, response } = await requestApi(url, {
       sign: false,
       parseJSON: false,
       headers: {
