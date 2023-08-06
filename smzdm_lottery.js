@@ -38,6 +38,7 @@ class SmzdmLotteryBot extends SmzdmBot {
 
       notifyMsg += `转盘抽奖ID: ${vipId1}\n`;
       notifyMsg += await this.draw(vipId1);
+      notifyMsg += '\n\n';
     }
 
     $.log();
