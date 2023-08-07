@@ -8,6 +8,7 @@ cron: 10 8 * * *
 const Env = require('./env');
 const { SmzdmBot, requestApi, removeTags, getEnvCookies, wait } = require('./bot');
 const notify = require('./sendNotify');
+const CryptoJS = require("crypto-js");
 
 // ------------------------------------
 
@@ -193,6 +194,38 @@ class SmzdmCheckinBot extends SmzdmBot {
   }
 }
 
+function random32() {
+  const chars = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  let result = "";
+  for (let i = 0; i < 32; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return result;
+}
+
+function getSk(cookie) {
+  const matchUserId = cookie.match(/smzdm_id=([^;]*)/);
+  if (!matchUserId) {
+    return ''
+  }
+  const userId = matchUserId[1];
+  const deviceId = getDeviceId(cookie);
+  const key = CryptoJS.enc.Utf8.parse('geZm53XAspb02exN');
+  const cipherText = CryptoJS.DES.encrypt(userId + deviceId, key, {
+    mode: CryptoJS.mode.ECB,
+    padding: CryptoJS.pad.Pkcs7
+  });
+  return cipherText.toString();
+}
+
+function getDeviceId(cookie) {
+  const matchDeviceId = cookie.match(/device_id=([^;]*)/);
+  if (matchDeviceId) {
+    return matchDeviceId[1]
+  }
+  return random32()
+}
+
 !(async () => {
   const cookies = getEnvCookies();
 
@@ -225,7 +258,10 @@ class SmzdmCheckinBot extends SmzdmBot {
       continue;
     }
 
-    const sk = sks[i];
+    let sk = sks[i];
+    if (!sk) {
+      sk = getSk(cookie)
+    }
 
     if (i > 0) {
       await wait(10, 30);
