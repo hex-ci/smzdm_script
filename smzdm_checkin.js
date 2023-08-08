@@ -8,7 +8,7 @@ cron: 10 8 * * *
 const Env = require('./env');
 const { SmzdmBot, requestApi, removeTags, getEnvCookies, wait } = require('./bot');
 const notify = require('./sendNotify');
-const CryptoJS = require("crypto-js");
+const CryptoJS = require('crypto-js');
 
 // ------------------------------------
 

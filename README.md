@@ -30,6 +30,10 @@ ql repo https://github.com/hex-ci/smzdm_script.git "" "env.js|bot.js|sendNotify.
 
 建议自行更改青龙面板的脚本执行时间
 
+### NodeJS 依赖
+
+* crypto-js
+
 ### 抓包
 
 建议使用 Android 手机抓包（iOS 也可以）域名为 `user-api.smzdm.com` 的任意链接，把**所有** Cookie 取出来放到青龙面板的 `SMZDM_COOKIE` 环境变量中，多用户请添加多个同名环境变量或者用 `&` 符号分隔。
