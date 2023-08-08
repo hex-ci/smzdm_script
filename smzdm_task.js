@@ -659,10 +659,12 @@ class SmzdmTaskBot extends SmzdmBot {
       await wait(3, 10);
     }
     else {
-      articles = [{
-        article_id: task.article_id,
-        article_channel_id: task.channel_id
-      }];
+      for (let i = 0; i < task.task_even_num - task.task_finished_num; i++) {
+        articles.push({
+          article_id: task.article_id,
+          article_channel_id: task.channel_id
+        });
+      }
 
       isRead = task.task_redirect_url.link_val != '';
     }
