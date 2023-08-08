@@ -195,19 +195,23 @@ class SmzdmCheckinBot extends SmzdmBot {
 }
 
 function random32() {
-  const chars = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
-  let result = "";
+  const chars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  let result = '';
+
   for (let i = 0; i < 32; i++) {
     result += chars.charAt(Math.floor(Math.random() * chars.length));
   }
+
   return result;
 }
 
 function getSk(cookie) {
   const matchUserId = cookie.match(/smzdm_id=([^;]*)/);
+
   if (!matchUserId) {
     return ''
   }
+
   const userId = matchUserId[1];
   const deviceId = getDeviceId(cookie);
   const key = CryptoJS.enc.Utf8.parse('geZm53XAspb02exN');
@@ -215,15 +219,18 @@ function getSk(cookie) {
     mode: CryptoJS.mode.ECB,
     padding: CryptoJS.pad.Pkcs7
   });
+
   return cipherText.toString();
 }
 
 function getDeviceId(cookie) {
   const matchDeviceId = cookie.match(/device_id=([^;]*)/);
+
   if (matchDeviceId) {
-    return matchDeviceId[1]
+    return matchDeviceId[1];
   }
-  return random32()
+
+  return random32();
 }
 
 !(async () => {

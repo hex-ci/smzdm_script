@@ -51,7 +51,7 @@ ql repo https://github.com/hex-ci/smzdm_script.git "" "env.js|bot.js|sendNotify.
 环境变量请使用环境变量列表直接添加，不要使用 `export xxx=""` 这种方式添加环境变量。
 
 * `SMZDM_COOKIE`: 抓包抓到的 Cookie 内容，需要所有 Cookie 内容，多用户可以用 `&` 分隔，或者使用多个同名环境变量。
-* `SMZDM_SK`: 这个值是可选值，是从安卓 App 的 `https://user-api.smzdm.com/checkin` 请求参数中抓包抓到的，如果抓到这个值可以填写（强烈建议填写），如果没抓到可以忽略，多用户可以用 `&` 分隔，或者使用多个同名环境变量，顺序要保持与 `SMZDM_COOKIE` 多用户顺序一致。
+* `SMZDM_SK`: 这个值是可选值，会自动计算，如果你一定想用自己的，可以抓取，是从安卓 App 的 `https://user-api.smzdm.com/checkin` 请求参数中抓包抓到的，多用户可以用 `&` 分隔，或者使用多个同名环境变量，顺序要保持与 `SMZDM_COOKIE` 多用户顺序一致。
 * `SMZDM_USER_AGENT_APP`: 这个值是可选值，是指 APP 的 User-Agent，从 APP 的 API 请求头中抓包得到，建议抓取 Android 的 User-Agent，不填使用脚本默认值。
 * `SMZDM_USER_AGENT_WEB`: 这个值是可选值，是指 APP 中访问网页的 User-Agent，一般在 APP 内的转盘网页中抓包得到，建议抓取 Android 的 User-Agent，不填使用脚本默认值。
 * `SMZDM_COMMENT`: 如果要完成评论文章的任务请设置这个环境变量，环境变量的内容是评论的文案，文案要大于 10 个汉字，建议用比较个性化的文案，脚本发布评论后会删除这条评论，但是为防止删除失败的情况，请尽量用好一点的文案，防止被判定为恶意灌水。
