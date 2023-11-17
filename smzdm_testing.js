@@ -42,11 +42,7 @@ class SmzdmTestingTaskBot extends SmzdmTaskBot {
     await wait(3, 5);
 
     // 查询当前拥有的能量数量, 以及过期时间
-    let myTestingInfo = await this.getMyTestingInfo();
-
-    if (myTestingInfo) {
-      notifyMsg += `当前拥有必中券: ${myTestingInfo.my_energy.my_energy_total}\n必中券过期时间: ${myTestingInfo.my_energy.energy_expired_time}\n`;
-    }
+    notifyMsg += await this.getMyTestingInfo();
 
     return notifyMsg || '无可执行任务';
   }
@@ -108,13 +104,18 @@ class SmzdmTestingTaskBot extends SmzdmTaskBot {
       headers: this.getHeadersForWeb(),
     });
 
-    if (!isSuccess) {
+    if (isSuccess) {
+      let msg = `当前拥有必中券: ${data.data.my_energy.my_energy_total}\n必中券过期时间: ${data.data.my_energy.energy_expired_time}\n`;
+
+      $.log(msg);
+
+      return `\n${msg}`;
+    }
+    else {
       $.log(`获取个人必中券信息失败！${response}`);
 
-      return null;
+      return '';
     }
-
-    return data.data;
   }
 
   // 领取奖励
@@ -128,6 +129,8 @@ class SmzdmTestingTaskBot extends SmzdmTaskBot {
     });
 
     if (isSuccess) {
+      $.log('领取成功！');
+
       return {
         isSuccess,
         msg: '',
