@@ -119,7 +119,7 @@ class SmzdmTestingTaskBot extends SmzdmTaskBot {
 
   // 领取奖励
   async receiveReward(taskId) {
-    const { isSuccess, data, response } = await requestApi('https://zhiyou.m.smzdm.com/task/task/ajax_activity_task_receive', {
+    const { isSuccess, response } = await requestApi('https://zhiyou.m.smzdm.com/task/task/ajax_activity_task_receive', {
       method: 'post',
       data: {
         'task_id': taskId,
@@ -130,7 +130,7 @@ class SmzdmTestingTaskBot extends SmzdmTaskBot {
     if (isSuccess) {
       return {
         isSuccess,
-        msg
+        msg: '',
       };
     }
     else {
@@ -138,7 +138,7 @@ class SmzdmTestingTaskBot extends SmzdmTaskBot {
 
       return {
         isSuccess,
-        msg: '领取任务奖励失败！'
+        msg: '领取任务奖励失败！',
       };
     }
   }
