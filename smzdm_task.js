@@ -1557,48 +1557,50 @@ class SmzdmTaskBot extends SmzdmBot {
   }
 }
 
-!(async () => {
-  const cookies = getEnvCookies();
+if (require.main === module) {
+  !(async () => {
+    const cookies = getEnvCookies();
 
-  if (cookies === false) {
-    $.log('\n请先设置 SMZDM_COOKIE 环境变量');
+    if (cookies === false) {
+      $.log('\n请先设置 SMZDM_COOKIE 环境变量');
 
-    return;
-  }
-
-  let notifyContent = '';
-
-  for (let i = 0; i < cookies.length; i++) {
-    const cookie = cookies[i];
-
-    if (!cookie) {
-      continue;
+      return;
     }
 
-    if (i > 0) {
-      $.log();
-      await wait(10, 30);
-      $.log();
+    let notifyContent = '';
+
+    for (let i = 0; i < cookies.length; i++) {
+      const cookie = cookies[i];
+
+      if (!cookie) {
+        continue;
+      }
+
+      if (i > 0) {
+        $.log();
+        await wait(10, 30);
+        $.log();
+      }
+
+      const sep = `\n****** 账号${i + 1} ******\n`;
+
+      $.log(sep);
+
+      const bot = new SmzdmTaskBot(cookie);
+      const msg = await bot.run();
+
+      notifyContent += `${sep}${msg}\n`;
     }
 
-    const sep = `\n****** 账号${i + 1} ******\n`;
+    $.log();
 
-    $.log(sep);
-
-    const bot = new SmzdmTaskBot(cookie);
-    const msg = await bot.run();
-
-    notifyContent += `${sep}${msg}\n`;
-  }
-
-  $.log();
-
-  await notify.sendNotify($.name, notifyContent);
-})().catch((e) => {
-  $.log('', `❌ ${$.name}, 失败! 原因: ${e}!`, '')
-}).finally(() => {
-  $.done();
-});
+    await notify.sendNotify($.name, notifyContent);
+  })().catch((e) => {
+    $.log('', `❌ ${$.name}, 失败! 原因: ${e}!`, '')
+  }).finally(() => {
+    $.done();
+  });
+}
 
 module.exports = {
   SmzdmTaskBot,
