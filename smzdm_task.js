@@ -1,5 +1,5 @@
 /*
-smzdm 任务脚本
+smzdm 每日任务脚本
 项目地址: https://github.com/hex-ci/smzdm_script
 
 cron: 20 14 * * *
@@ -11,7 +11,7 @@ const notify = require('./sendNotify');
 
 // ------------------------------------
 
-const $ = new Env('smzdm 任务');
+const $ = new Env('smzdm 每日任务');
 
 class SmzdmTaskBot extends SmzdmBot {
   constructor(cookie) {
@@ -28,13 +28,7 @@ class SmzdmTaskBot extends SmzdmBot {
 
     let notifyMsg = '';
 
-    for (let i = 0; i < tasks.length; i++) {
-      const task = tasks[i];
-      let tmpMsg =await this.doTask(task, this.receiveReward);
-      if(tmpMsg){
-        notifyMsg += tmpMsg;
-      }
-    }
+    notifyMsg = await this.doTasks(tasks);
 
     $.log('查询是否有限时累计活动阶段奖励');
     await wait(5, 15);
@@ -54,191 +48,111 @@ class SmzdmTaskBot extends SmzdmBot {
       $.log('无奖励');
     }
 
-    notifyMsg += await this.runTestin();
-
     return notifyMsg || '无可执行任务';
   }
 
-  // 运行全民众测-能量值 任务
-  async runTestin(){
-    // 从环境变量中读取, 是否开启能量值任务
-    if(process.env.SMZDM_TESTIN_TASK != 'yes' && false){
-      $.log('🟡请设置 SMZDM_TESTIN_TASK 环境变量值为 yes 后才能进行全民众测-能量值任务！');
-      return '';
-    }
+  // 执行任务列表中的任务
+  async doTasks(tasks) {
+    let notifyMsg = '';
 
-    $.log('开始进行全民众测-能量值任务');
-    await wait(5, 10);
-    const activityId = await this.getTestinActivityId();
-    if (!activityId) {
-      return '';
-    }
+    for (let i = 0; i < tasks.length; i++) {
+      const task = tasks[i];
 
-    const activityInfo = await this.getTestinActivityInfo(activityId);
-    if (!activityInfo) {
-      return '';
-    }
-    let notifyMsg = '\n===============全民众测-必中券-能量值\n';
+      // 待领取任务
+      if (task.task_status == '3') {
+        $.log(`领取[${task.task_name}]奖励:`);
 
-    // 开始做任务
-    for (let i = 0; i < activityInfo.activity_task.default_list.length; i++) {
-      let thisTask = activityInfo.activity_task.default_list[i];
-      $.log(`做任务: ${thisTask.task_name}`)
-      let tmpMsg = await this.doTask(thisTask, this.receiveTestin);
-      if (tmpMsg) {
-        notifyMsg += tmpMsg;
+        const { isSuccess } = await this.receiveReward(task.task_id);
+
+        notifyMsg += `${isSuccess ? '🟢' : '❌'}领取[${task.task_name}]奖励${isSuccess ? '成功' : '失败！请查看日志'}\n`;
+
+        await wait(5, 15);
       }
-    }
+      // 未完成任务
+      else if (task.task_status == '2') {
+        // 浏览文章任务
+        if (task.task_event_type == 'interactive.view.article') {
+          const { isSuccess } = await this.doViewTask(task);
 
-    // 查询当前拥有的能量数量, 以及过期时间
-    let myTestinInfo = await this.getMyTestinInfo();
-    if(myTestinInfo){
-      notifyMsg += `当前拥有必中券: ${myTestinInfo.my_energy.my_energy_total}\n必中券过期时间: ${myTestinInfo.my_energy.energy_expired_time}\n`;
+          notifyMsg += this.getTaskNotifyMessage(isSuccess, task);
+
+          await wait(5, 15);
+        }
+        // 分享任务
+        else if (task.task_event_type == 'interactive.share') {
+          const { isSuccess } = await this.doShareTask(task);
+
+          notifyMsg += this.getTaskNotifyMessage(isSuccess, task);
+
+          await wait(5, 15);
+        }
+        // 抽奖任务
+        else if (task.task_event_type == 'guide.crowd') {
+          const { isSuccess, code } = await this.doCrowdTask(task);
+
+          if (code !== 99) {
+            notifyMsg += this.getTaskNotifyMessage(isSuccess, task);
+          }
+
+          await wait(5, 15);
+        }
+        // 关注用户任务
+        else if (task.task_event_type == 'interactive.follow.user') {
+          const { isSuccess } = await this.doFollowUserTask(task);
+
+          notifyMsg += this.getTaskNotifyMessage(isSuccess, task);
+
+          await wait(5, 15);
+        }
+        // 关注栏目任务
+        else if (task.task_event_type == 'interactive.follow.tag') {
+          const { isSuccess } = await this.doFollowTagTask(task);
+
+          notifyMsg += this.getTaskNotifyMessage(isSuccess, task);
+
+          await wait(5, 15);
+        }
+        // 关注品牌
+        else if (task.task_event_type == 'interactive.follow.brand') {
+          const { isSuccess } = await this.doFollowBrandTask(task);
+
+          notifyMsg += this.getTaskNotifyMessage(isSuccess, task);
+
+          await wait(5, 15);
+        }
+        // 收藏任务
+        else if (task.task_event_type == 'interactive.favorite') {
+          const { isSuccess } = await this.doFavoriteTask(task);
+
+          notifyMsg += this.getTaskNotifyMessage(isSuccess, task);
+
+          await wait(5, 15);
+        }
+        // 点赞任务
+        else if (task.task_event_type == 'interactive.rating') {
+          const { isSuccess } = await this.doRatingTask(task);
+
+          notifyMsg += this.getTaskNotifyMessage(isSuccess, task);
+
+          await wait(5, 15);
+        }
+        // 评论任务
+        else if (task.task_event_type == 'interactive.comment') {
+          if (process.env.SMZDM_COMMENT && String(process.env.SMZDM_COMMENT).length > 10) {
+            const { isSuccess } = await this.doCommentTask(task);
+
+            notifyMsg += this.getTaskNotifyMessage(isSuccess, task);
+
+            await wait(5, 15);
+          }
+          else {
+            $.log('🟡请设置 SMZDM_COMMENT 环境变量后才能做评论任务！');
+          }
+        }
+      }
     }
 
     return notifyMsg;
-  }
-
-  // 获取当前能量值任务的活动 ID
-  async getTestinActivityId() {
-    $.log('获取当前活动');
-    await wait(3, 5);
-    const {
-      isSuccess,
-      data,
-      response
-    } = await requestApi('https://zhiyou.m.smzdm.com/task/task/ajax_get_activity_id', {
-      method: 'get',
-      data: {
-        'from': 'zhongce',
-      },
-      headers: {
-        ...this.getHeadersForWeb(),
-        Origin: 'https://test.m.smzdm.com',
-        Referer: `https://test.m.smzdm.com/`
-      }
-    });
-    if (isSuccess) {
-      return data.data.activity_id;
-    } else {
-      $.log(`任务列表失败！${response}`);
-      return false;
-    }
-  }
-
-  // 众测中心-必中券信息查询
-  async getMyTestinInfo() {
-    $.log('获取必中券信息');
-    await wait(3, 5);
-    const { isSuccess, data, response } = await requestApi('https://test.m.smzdm.com/win_coupon/user_data', {
-      method: 'get',
-      headers: this.getHeadersForWeb(),
-    });
-    if(!isSuccess){
-      $.log(`获取个人必中券信息失败. ${response}`)
-      return null;
-    }
-    return data.data;
-  }
-
-  // 获取活动下的所有任务
-  async getTestinActivityInfo(activityId) {
-    if (!activityId) {
-      $.log('获取活动详情失败, 没有活动');
-      return false;
-    }
-    await wait(5, 10);
-    const { isSuccess, data, response } = await requestApi('https://zhiyou.m.smzdm.com/task/task/ajax_get_activity_info', {
-      method: 'get',
-      data: {
-        'activity_id': activityId,
-      },
-      headers: this.getHeadersForWeb(),
-    });
-    if (isSuccess) {
-      return data.data;
-    } else {
-      $.log(`任务详情失败！${response}`);
-      return false;
-    }
-  }
-
-  // 领取奖励
-  async receiveTestin(task, self) {
-    await wait(5, 10);
-    const {
-      isSuccess,
-      data,
-      response
-    } = await requestApi('https://zhiyou.m.smzdm.com/task/task/ajax_activity_task_receive', {
-      method: 'post',
-      data: {
-        'task_id': task.task_id,
-      },
-      headers: self.getHeadersForWeb(),
-    });
-    if (!isSuccess) {
-      $.log(`领取奖励失败！${response}`);
-    }
-    return {
-      isSuccess,
-    };
-  }
-
-  async doTask(task, receiveCall) {
-    if(task.task_status == '4'){ // 已经领取的奖励
-      return this.getTaskNotifyMessage(true, task);
-    }
-    if (task.task_status == '3') { // 可领取的奖励
-      $.log(`领取[${task.task_name}]奖励:`);
-      await wait(5, 15);
-      const { isSuccess } = await receiveCall(task, this);
-      return this.getTaskNotifyMessage(isSuccess, task);
-    }
-    if (task.task_event_type == 'interactive.view.article') { // 浏览文章任务
-      await wait(5, 15);
-      const {isSuccess} = await this.doViewTask(task, receiveCall);
-      return this.getTaskNotifyMessage(isSuccess, task);
-    } else if (task.task_event_type == 'interactive.share') { // 分享任务
-      await wait(5, 15);
-      const {isSuccess} = await this.doShareTask(task, receiveCall);
-      return this.getTaskNotifyMessage(isSuccess, task);
-    } else if (task.task_event_type == 'guide.crowd') { // 抽奖任务
-      await wait(5, 15);
-      const {isSuccess, code} = await this.doCrowdTask(task, receiveCall);
-      if (code !== 99) {
-        return this.getTaskNotifyMessage(isSuccess, task);
-      }
-    } else if (task.task_event_type == 'interactive.follow.user') { // 关注用户任务
-      await wait(5, 15);
-      const {isSuccess} = await this.doFollowUserTask(task, receiveCall);
-      return this.getTaskNotifyMessage(isSuccess, task);
-    } else if (task.task_event_type == 'interactive.follow.tag') { // 关注栏目任务
-      await wait(5, 15);
-      const {isSuccess} = await this.doFollowTagTask(task, receiveCall);
-      return this.getTaskNotifyMessage(isSuccess, task);
-    } else if (task.task_event_type == 'interactive.follow.brand') { // 关注品牌
-      await wait(5, 15);
-      const {isSuccess} = await this.doFollowBrandTask(task, receiveCall);
-      return this.getTaskNotifyMessage(isSuccess, task);
-    } else if (task.task_event_type == 'interactive.favorite') { // 收藏任务
-      await wait(5, 15);
-      const {isSuccess} = await this.doFavoriteTask(task, receiveCall);
-      return this.getTaskNotifyMessage(isSuccess, task);
-    } else if (task.task_event_type == 'interactive.rating') { // 点赞任务
-      await wait(5, 15);
-      const {isSuccess} = await this.doRatingTask(task, receiveCall);
-      return this.getTaskNotifyMessage(isSuccess, task);
-    } else if (task.task_event_type == 'interactive.comment') { // 评论任务
-      if (process.env.SMZDM_COMMENT && String(process.env.SMZDM_COMMENT).length > 10) {
-        await wait(5, 15);
-        const {isSuccess} = await this.doCommentTask(task, receiveCall);
-        return this.getTaskNotifyMessage(isSuccess, task);
-      } else {
-        this.e.log('🟡请设置 SMZDM_COMMENT 环境变量后才能做评论任务！');
-      }
-    }
-    return '';
   }
 
   getTaskNotifyMessage(isSuccess, task) {
@@ -246,7 +160,7 @@ class SmzdmTaskBot extends SmzdmBot {
   }
 
   // 执行评论任务
-  async doCommentTask(task, receiveCall) {
+  async doCommentTask(task) {
     $.log(`开始任务: ${task.task_name}`);
 
     const articles = await this.getArticleList(20);
@@ -290,11 +204,11 @@ class SmzdmTaskBot extends SmzdmBot {
     $.log('领取奖励');
     await wait(5, 15);
 
-    return await receiveCall(task, this);
+    return await this.receiveReward(task.task_id);
   }
 
   // 执行点赞任务
-  async doRatingTask(task, receiveCall) {
+  async doRatingTask(task) {
     $.log(`开始任务: ${task.task_name}`);
 
     let article;
@@ -322,10 +236,6 @@ class SmzdmTaskBot extends SmzdmBot {
       }
 
       article = this.getOneByRandom(articles);
-    }
-    else if (task.task_redirect_url.link_type === 'article') {
-      // 获取文章信息
-      article = await this.getArticleDetail(task.task_redirect_url.link_val);
     }
     else {
       $.log('尚未支持');
@@ -392,11 +302,11 @@ class SmzdmTaskBot extends SmzdmBot {
     $.log('领取奖励');
     await wait(5, 15);
 
-    return await receiveCall(task, this);
+    return await this.receiveReward(task.task_id);
   }
 
   // 执行收藏任务
-  async doFavoriteTask(task, receiveCall) {
+  async doFavoriteTask(task) {
     $.log(`开始任务: ${task.task_name}`);
 
     let articleId = '';
@@ -489,11 +399,11 @@ class SmzdmTaskBot extends SmzdmBot {
     $.log('领取奖励');
     await wait(5, 15);
 
-    return await receiveCall(task, this);
+    return await this.receiveReward(task.task_id);
   }
 
   // 执行关注用户任务
-  async doFollowUserTask(task, receiveCall) {
+  async doFollowUserTask(task) {
     $.log(`开始任务: ${task.task_name}`);
 
     // 随机选一个用户
@@ -540,11 +450,11 @@ class SmzdmTaskBot extends SmzdmBot {
     $.log('领取奖励');
     await wait(5, 15);
 
-    return await receiveCall(task, this);
+    return await this.receiveReward(task.task_id);
   }
 
   // 执行关注栏目任务（先取关，再关注，最后取关）
-  async doFollowTagTask(task, receiveCall) {
+  async doFollowTagTask(task) {
     $.log(`开始任务: ${task.task_name}`);
 
     let lanmuId = '';
@@ -607,11 +517,11 @@ class SmzdmTaskBot extends SmzdmBot {
     $.log('领取奖励');
     await wait(5, 15);
 
-    return await receiveCall(task, this);
+    return await this.receiveReward(task.task_id);
   }
 
   // 执行关注品牌任务（先取关，再关注，最后取关）
-  async doFollowBrandTask(task, receiveCall) {
+  async doFollowBrandTask(task) {
     $.log(`开始任务: ${task.task_name}`);
 
     // 获取品牌信息
@@ -650,11 +560,11 @@ class SmzdmTaskBot extends SmzdmBot {
     $.log('领取奖励');
     await wait(5, 15);
 
-    return await receiveCall(task, this);
+    return await this.receiveReward(task.task_id);
   }
 
   // 执行抽奖任务
-  async doCrowdTask(task, receiveCall) {
+  async doCrowdTask(task) {
     $.log(`开始任务: ${task.task_name}`);
 
     let { isSuccess, data } = await this.getCrowd('免费', 0);
@@ -693,11 +603,11 @@ class SmzdmTaskBot extends SmzdmBot {
     $.log('领取奖励');
     await wait(5, 15);
 
-    return await receiveCall(task, this);
+    return await this.receiveReward(task.task_id);
   }
 
   // 执行文章分享任务
-  async doShareTask(task, receiveCall) {
+  async doShareTask(task) {
     $.log(`开始任务: ${task.task_name}`);
 
     let articles = [];
@@ -741,11 +651,11 @@ class SmzdmTaskBot extends SmzdmBot {
     $.log('领取奖励');
     await wait(3, 10);
 
-    return await receiveCall(task, this);
+    return await this.receiveReward(task.task_id);
   }
 
   // 执行浏览任务
-  async doViewTask(task, receiveCall) {
+  async doViewTask(task) {
     $.log(`开始任务: ${task.task_name}`);
 
     let articles = [];
@@ -809,7 +719,7 @@ class SmzdmTaskBot extends SmzdmBot {
     $.log('领取奖励');
     await wait(3, 10);
 
-    return await receiveCall(task, this);
+    return await this.receiveReward(task.task_id);
   }
 
   // 领取活动奖励
@@ -1179,8 +1089,8 @@ class SmzdmTaskBot extends SmzdmBot {
   }
 
   // 领取任务奖励
-  async receiveReward(task, self) {
-    const robotToken = await self.getRobotToken();
+  async receiveReward(taskId) {
+    const robotToken = await this.getRobotToken();
 
     if (robotToken === false) {
       return {
@@ -1191,14 +1101,14 @@ class SmzdmTaskBot extends SmzdmBot {
 
     const { isSuccess, data, response } = await requestApi('https://user-api.smzdm.com/task/activity_task_receive', {
       method: 'post',
-      headers: self.getHeaders(),
+      headers: this.getHeaders(),
       data: {
         robot_token: robotToken,
         geetest_seccode: '',
         geetest_validate: '',
         geetest_challenge: '',
         captcha: '',
-        task_id: task.task_id
+        task_id: taskId
       }
     });
 
@@ -1689,3 +1599,7 @@ class SmzdmTaskBot extends SmzdmBot {
 }).finally(() => {
   $.done();
 });
+
+module.exports = {
+  SmzdmTaskBot,
+};
