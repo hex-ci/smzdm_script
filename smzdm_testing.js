@@ -105,11 +105,11 @@ class SmzdmTestingTaskBot extends SmzdmTaskBot {
     });
 
     if (isSuccess) {
-      let msg = `当前拥有必中券: ${data.data.my_energy.my_energy_total}\n必中券过期时间: ${data.data.my_energy.energy_expired_time}\n`;
+      let msg = `当前拥有必中券: ${data.data.my_energy.my_energy_total}\n必中券过期时间: ${data.data.my_energy.energy_expired_time}`;
 
       $.log(msg);
 
-      return `\n${msg}`;
+      return `\n${msg}\n`;
     }
     else {
       $.log(`获取个人必中券信息失败！${response}`);

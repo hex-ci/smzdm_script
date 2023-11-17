@@ -237,6 +237,10 @@ class SmzdmTaskBot extends SmzdmBot {
 
       article = this.getOneByRandom(articles);
     }
+    else if (task.task_redirect_url.link_type === 'article') {
+      // 获取文章信息
+      article = await this.getArticleDetail(task.task_redirect_url.link_val);
+    }
     else {
       $.log('尚未支持');
 
