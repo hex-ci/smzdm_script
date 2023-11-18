@@ -14,8 +14,9 @@ const notify = require('./sendNotify');
 const $ = new Env('smzdm 每日任务');
 
 class SmzdmTaskBot extends SmzdmBot {
-  constructor(cookie) {
+  constructor(cookie, type='task') {
     super(cookie);
+    this.type = type;
   }
 
   // 主函数
@@ -239,7 +240,14 @@ class SmzdmTaskBot extends SmzdmBot {
     }
     else if (task.task_redirect_url.link_type === 'article') {
       // 获取文章信息
-      article = await this.getArticleDetail(task.task_redirect_url.link_val);
+      if(this.type === 'testing'){
+        article = {
+          'article_id': task.task_redirect_url.link_val,
+          'article_channel_id': 8, // 众测任务的 channel_id 目前看到的是固定 8, 若后面出现问题, 可考虑从 url 中正则匹配获取
+        }
+      }else{
+        article = await this.getArticleDetail(task.task_redirect_url.link_val);
+      }
     }
     else {
       $.log('尚未支持');

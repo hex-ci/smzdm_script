@@ -16,7 +16,7 @@ const $ = new Env('smzdm 全民众测能量值任务');
 
 class SmzdmTestingTaskBot extends SmzdmTaskBot {
   constructor(cookie) {
-    super(cookie);
+    super(cookie, 'testing');
   }
 
   // 主函数
