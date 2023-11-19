@@ -208,27 +208,31 @@ class SmzdmTaskBot extends SmzdmBot {
   }
 
   // 通过 url 获取文章信息
-  async getArticleInfoByLink(link, id){
+  async getArticleInfoByLink(link, id) {
     const { isSuccess, response } = await requestApi(link, {
       method: 'get',
       headers: this.getHeaders(),
       parseJSON: false,
-      sign: false,
+      sign: false
     });
-    if(!isSuccess){
-      $.log(`获取文章信息失败. ${response}`)
+
+    if (!isSuccess) {
+      $.log(`获取文章信息失败！${response}`);
       return null;
     }
+
     // 通过正则提取页面中的 channel_id
-    let re = /'channel_id':'(\d+)'/;
-    let matchRet = response.match(re);
-    if(!matchRet){
-      $.log(`获取文章信息失败. ${response}`)
+    const re = /'channel_id':'(\d+)'/;
+    const matchRet = response.match(re);
+
+    if (!matchRet) {
+      $.log(`获取文章信息失败！${response}`);
       return null;
     }
+
     return {
       'article_id': id,
-      'article_channel_id': matchRet[1],
+      'article_channel_id': matchRet[1]
     };
   }
 
@@ -264,7 +268,8 @@ class SmzdmTaskBot extends SmzdmBot {
     }
     else if (task.task_redirect_url.link != '' && task.task_redirect_url.link_val != '') {
       article = await this.getArticleInfoByLink(task.task_redirect_url.link, task.task_redirect_url.link_val);
-      if(!article){
+
+      if (!article) {
         return {
           isSuccess: false
         };
@@ -1636,5 +1641,5 @@ if (require.main === module) {
 }
 
 module.exports = {
-  SmzdmTaskBot,
+  SmzdmTaskBot
 };
