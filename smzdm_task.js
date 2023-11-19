@@ -207,6 +207,31 @@ class SmzdmTaskBot extends SmzdmBot {
     return await this.receiveReward(task.task_id);
   }
 
+  // 通过 url 获取文章信息
+  async getArticleInfoByLink(link, id){
+    const { isSuccess, response } = await requestApi(link, {
+      method: 'get',
+      headers: this.getHeaders(),
+      parseJSON: false,
+      sign: false,
+    });
+    if(!isSuccess){
+      $.log(`获取文章信息失败. ${response}`)
+      return null;
+    }
+    // 通过正则提取页面中的 channel_id
+    let re = /'channel_id':'(\d+)'/;
+    let matchRet = response.match(re);
+    if(!matchRet){
+      $.log(`获取文章信息失败. ${response}`)
+      return null;
+    }
+    return {
+      'article_id': id,
+      'article_channel_id': matchRet[1],
+    };
+  }
+
   // 执行点赞任务
   async doRatingTask(task) {
     $.log(`开始任务: ${task.task_name}`);
@@ -237,9 +262,13 @@ class SmzdmTaskBot extends SmzdmBot {
 
       article = this.getOneByRandom(articles);
     }
-    else if (task.task_redirect_url.link_type === 'article') {
-      // 获取文章信息
-      article = await this.getArticleDetail(task.task_redirect_url.link_val);
+    else if (task.task_redirect_url.link != '' && task.task_redirect_url.link_val != '') {
+      article = await this.getArticleInfoByLink(task.task_redirect_url.link, task.task_redirect_url.link_val);
+      if(!article){
+        return {
+          isSuccess: false
+        };
+      }
     }
     else {
       $.log('尚未支持');
