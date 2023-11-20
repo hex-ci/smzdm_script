@@ -1,5 +1,7 @@
 # 自用脚本 for 青龙面板
 
+[![Node.js CI](https://github.com/hex-ci/smzdm_script/actions/workflows/node.js.yml/badge.svg)](https://github.com/hex-ci/smzdm_script/actions/workflows/node.js.yml)
+
 ## 脚本内容
 
 * 每日签到
