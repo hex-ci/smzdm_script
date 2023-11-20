@@ -4,7 +4,7 @@
   "description": "smzdm 自用脚本 for 青龙面板，支持 App 端签到、转盘抽奖、每日任务等功能",
   "main": "smzdm_checkin.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "lint": "eslint --cache --max-warnings 0 \"./*.{js,ts}\" --ignore-path .gitignore"
   },
   "repository": {
     "type": "git",
