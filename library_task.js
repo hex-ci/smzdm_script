@@ -165,35 +165,6 @@ class SmzdmTaskBot extends SmzdmBot {
     return await this.receiveReward(task.task_id);
   }
 
-  // 通过 url 获取文章信息
-  async getArticleInfoByLink(link, id) {
-    const { isSuccess, response } = await requestApi(link, {
-      method: 'get',
-      headers: this.getHeaders(),
-      parseJSON: false,
-      sign: false
-    });
-
-    if (!isSuccess) {
-      this.$env.log(`获取文章信息失败！${response}`);
-      return null;
-    }
-
-    // 通过正则提取页面中的 channel_id
-    const re = /'channel_id':'(\d+)'/;
-    const matchRet = response.match(re);
-
-    if (!matchRet) {
-      this.$env.log(`获取文章信息失败！${response}`);
-      return null;
-    }
-
-    return {
-      'article_id': id,
-      'article_channel_id': matchRet[1]
-    };
-  }
-
   // 执行点赞任务
   async doRatingTask(task) {
     this.$env.log(`开始任务: ${task.task_name}`);
@@ -225,13 +196,18 @@ class SmzdmTaskBot extends SmzdmBot {
       article = this.getOneByRandom(articles);
     }
     else if (task.task_redirect_url.link != '' && task.task_redirect_url.link_val != '') {
-      article = await this.getArticleInfoByLink(task.task_redirect_url.link, task.task_redirect_url.link_val);
+      const channelId = await this.getArticleChannelIdForTesting(task.task_redirect_url.link);
 
-      if (!article) {
+      if (!channelId) {
         return {
           isSuccess: false
         };
       }
+
+      article = {
+        'article_id': task.task_redirect_url.link_val,
+        'article_channel_id': channelId
+      };
     }
     else {
       this.$env.log('尚未支持');
@@ -1439,6 +1415,32 @@ class SmzdmTaskBot extends SmzdmBot {
       this.$env.log(`获取文章列表失败: ${response}`);
       return [];
     }
+  }
+
+  // 通过 url 获取文章 channel_id
+  async getArticleChannelIdForTesting(url) {
+    const { isSuccess, response } = await requestApi(url, {
+      method: 'get',
+      headers: this.getHeaders(),
+      parseJSON: false,
+      sign: false
+    });
+
+    if (!isSuccess) {
+      this.$env.log(`获取文章信息失败！${response}`);
+      return null;
+    }
+
+    // 通过正则提取页面中的 channel_id
+    const re = /'channel_id'\s*:\s*'(\d+)'/;
+    const matchRet = response.match(re);
+
+    if (!matchRet) {
+      this.$env.log(`获取文章信息失败！${response}`);
+      return null;
+    }
+
+    return matchRet[1];
   }
 }
 
