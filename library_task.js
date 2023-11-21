@@ -1428,7 +1428,8 @@ class SmzdmTaskBot extends SmzdmBot {
 
     if (!isSuccess) {
       this.$env.log(`获取文章信息失败！${response}`);
-      return null;
+
+      return false;
     }
 
     // 通过正则提取页面中的 channel_id
@@ -1437,7 +1438,8 @@ class SmzdmTaskBot extends SmzdmBot {
 
     if (!matchRet) {
       this.$env.log(`获取文章信息失败！${response}`);
-      return null;
+
+      return false;
     }
 
     return matchRet[1];
