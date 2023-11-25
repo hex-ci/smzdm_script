@@ -149,7 +149,7 @@ class SmzdmTestingTaskBot extends SmzdmTaskBot {
 
 !(async () => {
   if (process.env.SMZDM_TASK_TESTING != 'yes') {
-    $.log('🟡请设置 SMZDM_TASK_TESTING 环境变量值为 yes 后才能运行全民众测能量值任务！');
+    $.log('\n🟡请设置 SMZDM_TASK_TESTING 环境变量值为 yes 后才能运行全民众测能量值任务！');
 
     return;
   }
