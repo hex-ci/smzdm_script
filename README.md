@@ -72,7 +72,7 @@ https://t.me/smzdm_script
 
 ## 推荐🐔场
 
-自用🐔场，稳定，已用 5 年以上，[点这里注册](https://t.kkkcloud.men/#/register?code=TQdKjctR)
+自用🐔场，稳定，已用 5 年以上，[点这里注册](https://cloud.sstea.men/#/register?code=TQdKjctR)
 
 ## 其它说明
 
