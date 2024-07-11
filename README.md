@@ -1,4 +1,4 @@
-# 自用脚本 for 青龙面板
+![image](https://github.com/hex-ci/smzdm_script/assets/13709/d51b99ed-978f-4b3e-b667-80a5dea6b4c8)# 自用脚本 for 青龙面板
 
 [![Node.js CI](https://github.com/hex-ci/smzdm_script/actions/workflows/node.js.yml/badge.svg)](https://github.com/hex-ci/smzdm_script/actions/workflows/node.js.yml)
 
@@ -72,7 +72,7 @@ https://t.me/smzdm_script
 
 ## 推荐🐔场
 
-自用🐔场，稳定，已用 5 年以上，[点这里注册](https://exce.sstea.men/#/register?code=TQdKjctR)
+自用🐔场，稳定，已用 5 年以上，[点这里注册](https://www.easyfastcloud.com/#/register?code=RpZdsM6U)
 
 ## 其它说明
 
