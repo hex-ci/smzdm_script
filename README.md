@@ -1,4 +1,4 @@
-![image](https://github.com/hex-ci/smzdm_script/assets/13709/d51b99ed-978f-4b3e-b667-80a5dea6b4c8)# 自用脚本 for 青龙面板
+# 自用脚本 for 青龙面板
 
 [![Node.js CI](https://github.com/hex-ci/smzdm_script/actions/workflows/node.js.yml/badge.svg)](https://github.com/hex-ci/smzdm_script/actions/workflows/node.js.yml)
 
