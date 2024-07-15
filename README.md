@@ -72,7 +72,7 @@ https://t.me/smzdm_script
 
 ## 推荐🐔场
 
-自用🐔场，稳定，已用 5 年以上，[点这里注册](https://www.easyfastcloud.com/#/register?code=RpZdsM6U)
+自用🐔场，稳定，已用 5 年以上，[点这里注册](https://www.efcloud1.cc/#/register?code=RpZdsM6U)
 
 ## 其它说明
 
