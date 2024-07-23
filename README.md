@@ -76,7 +76,7 @@ https://t.me/smzdm_script
 
 节点情况：
 
-<img src="https://github.com/hex-ci/smzdm_script/blob/main/.github/server.png?raw=true">
+<img src="https://raw.githubusercontent.com/hex-ci/smzdm_script/main/.github/server.png" height="300">
 
 ## 其它说明
 
