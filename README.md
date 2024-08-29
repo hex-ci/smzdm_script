@@ -74,10 +74,6 @@ https://t.me/smzdm_script
 
 自用🐔场，稳定，已用 5 年以上，[点这里注册](https://inv.easyfastcloud.com/#/register?code=RpZdsM6U)
 
-节点情况：
-
-<img src="https://raw.githubusercontent.com/hex-ci/smzdm_script/main/.github/server.png">
-
 ## 其它说明
 
 使用本脚本可能会造成你的账号临时或永久封禁，请自行评估是否使用本脚本。
