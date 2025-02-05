@@ -72,7 +72,7 @@ https://t.me/smzdm_script
 
 ## 推荐🐔场
 
-自用🐔场，稳定，已用 5 年以上，[点这里注册](https://inv.easyfastcloud.com/#/register?code=RpZdsM6U)
+自用🐔场，稳定，已用 5 年以上，[点这里注册](https://xsus.wiki/#/register?code=GMsubu2k)
 
 ## 其它说明
 
