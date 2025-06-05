@@ -35,6 +35,7 @@ ql repo https://github.com/hex-ci/smzdm_script.git "smzdm_" "" "env.js|bot.js|se
 
 ### NodeJS 依赖
 
+* got
 * crypto-js
 
 ### 抓包
