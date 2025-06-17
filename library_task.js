@@ -269,6 +269,22 @@ class SmzdmTaskBot extends SmzdmBot {
         id: article.article_id,
         channelId: article.article_channel_id
       });
+
+      await wait(3, 10);
+
+      await this.rating({
+        method: 'like_create',
+        id: article.article_id,
+        channelId: article.article_channel_id
+      });
+
+      await wait(3, 10);
+
+      await this.rating({
+        method: 'like_cancel',
+        id: article.article_id,
+        channelId: article.article_channel_id
+      });
     }
 
     this.$env.log('领取奖励');
