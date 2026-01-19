@@ -63,7 +63,7 @@ class SmzdmNormalTaskBot extends SmzdmTaskBot {
       let tasks = [];
 
       if (data.data.rows[0]) {
-        data.data.rows[0].cell_data.activity_task.accumulate_list.task_list_v2.forEach(item => {
+        data.data.rows[0].cell_data.activity_task.default_list_v2.forEach(item => {
           tasks = tasks.concat(item.task_list);
         });
 
