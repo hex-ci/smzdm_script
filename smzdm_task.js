@@ -6,7 +6,14 @@ cron: 20 14 * * *
 */
 
 const Env = require('./env');
-const { requestApi, removeTags, getEnvCookies, wait } = require('./bot');
+const {
+  requestApi,
+  removeTags,
+  getEnvCookies,
+  wait,
+  waitHuman,
+  IS_INSTALL_ZHANGDAMA
+} = require('./bot');
 const notify = require('./sendNotify');
 const { SmzdmTaskBot } = require('./library_task');
 
@@ -25,21 +32,21 @@ class SmzdmNormalTaskBot extends SmzdmTaskBot {
 
     const { tasks } = await this.getTaskList();
 
-    await wait(5, 10);
+    await waitHuman(5, 10);
 
     let notifyMsg = '';
 
     notifyMsg = await this.doTasks(tasks);
 
     $.log('查询是否有限时累计活动阶段奖励');
-    await wait(5, 15);
+    await waitHuman(5, 15);
 
     // 领取活动奖励
     const { detail } = await this.getTaskList();
 
     if (detail.cell_data && detail.cell_data.activity_reward_status == '1') {
       $.log('有奖励，领取奖励');
-      await wait(5, 15);
+      await waitHuman(5, 15);
 
       const { isSuccess } = await this.receiveActivity(detail.cell_data);
 
@@ -56,7 +63,10 @@ class SmzdmNormalTaskBot extends SmzdmTaskBot {
   async getTaskList() {
     const { isSuccess, data, response } = await requestApi('https://user-api.smzdm.com/task/list_v2', {
       method: 'post',
-      headers: this.getHeaders()
+      headers: this.getHeaders(),
+      data: {
+        is_install_zhangdama: IS_INSTALL_ZHANGDAMA
+      }
     });
 
     if (isSuccess) {

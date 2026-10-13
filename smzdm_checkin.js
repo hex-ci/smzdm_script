@@ -6,7 +6,16 @@ cron: 10 8 * * *
 */
 
 const Env = require('./env');
-const { SmzdmBot, requestApi, removeTags, getEnvCookies, wait } = require('./bot');
+const {
+  SmzdmBot,
+  requestApi,
+  removeTags,
+  getEnvCookies,
+  wait,
+  waitHuman,
+  CREATE_CENTER_VIEW,
+  IS_INSTALL_ZHANGDAMA
+} = require('./bot');
 const notify = require('./sendNotify');
 const CryptoJS = require('crypto-js');
 
@@ -49,7 +58,7 @@ class SmzdmCheckinBot extends SmzdmBot {
 🏅碎银: ${data.data.pre_re_silver}
 🏅补签卡: ${data.data.cards}`;
 
-      await wait(3, 10);
+      await waitHuman(3, 10);
 
       const vip = await this.getVipInfo();
 
@@ -85,22 +94,24 @@ class SmzdmCheckinBot extends SmzdmBot {
     });
 
     if (isSuccess) {
-      const msg1 = `${data.data.normal_reward.reward_add.title}: ${data.data.normal_reward.reward_add.content}`;
+      const normal = data.data.normal_reward;
 
-      let msg2 = '';
+      // reward_add 为空说明今天没有奖励增加（已领过或没有），退回展示签到卡片文案
+      const msg1 = normal.reward_add.title
+        ? `${normal.reward_add.title}: ${normal.reward_add.content}`
+        : removeTags(normal.gift.content);
 
-      if (data.data.normal_reward.gift.title) {
-        msg2 = `${data.data.normal_reward.gift.title}: ${data.data.normal_reward.gift.content_str}`;
-      }
-      else {
-        msg2 = `${data.data.normal_reward.gift.sub_content}`;
-      }
+      const msg2 = normal.gift.title
+        ? `${normal.gift.title}: ${normal.gift.content_str}`
+        : normal.gift.sub_content;
 
-      $.log(`${msg1}\n${msg2}\n`);
+      const msg = [msg1, msg2].filter(text => text).join('\n');
+
+      $.log(`${msg}\n`);
 
       return {
         isSuccess,
-        msg: `${msg1}\n${msg2}\n\n`
+        msg: `${msg}\n\n`
       };
     }
     else {
@@ -129,7 +140,7 @@ class SmzdmCheckinBot extends SmzdmBot {
       };
     }
 
-    await wait(5, 10);
+    await waitHuman(5, 10);
 
     const { isSuccess, data, response } = await requestApi('https://user-api.smzdm.com/checkin/extra_reward', {
       method: 'post',
@@ -159,13 +170,17 @@ class SmzdmCheckinBot extends SmzdmBot {
   async isContinueCheckin() {
     const { isSuccess, data, response } = await requestApi('https://user-api.smzdm.com/checkin/show_view_v2', {
       method: 'post',
-      headers: this.getHeaders()
+      headers: this.getHeaders(),
+      data: {
+        is_install_zhangdama: IS_INSTALL_ZHANGDAMA
+      }
     });
 
     if (isSuccess) {
-      const result = data.data.rows.find(item => item.cell_type == '18001');
+      // 连续签到的卡片，直接按有没有 checkin_continue 来找
+      const result = data.data.rows.find(item => item.cell_data && item.cell_data.checkin_continue);
 
-      return result.cell_data.checkin_continue.continue_checkin_reward_show;
+      return !!(result && result.cell_data.checkin_continue.continue_checkin_reward_show);
     }
     else {
       $.log(`查询是否有额外奖励失败！${response}`);
@@ -179,7 +194,8 @@ class SmzdmCheckinBot extends SmzdmBot {
       method: 'post',
       headers: this.getHeaders(),
       data: {
-        token: this.token
+        token: this.token,
+        create_center_view: CREATE_CENTER_VIEW
       }
     });
 

@@ -6,7 +6,7 @@ cron: 20 15 * * *
 */
 
 const Env = require('./env');
-const { requestApi, getEnvCookies, wait } = require('./bot');
+const { requestApi, getEnvCookies, wait, waitHuman } = require('./bot');
 const notify = require('./sendNotify');
 const { SmzdmTaskBot } = require('./library_task');
 
@@ -21,13 +21,28 @@ class SmzdmTestingTaskBot extends SmzdmTaskBot {
 
   // 主函数
   async run() {
+    let notifyMsg = await this.doTestingTasks();
+
+    await waitHuman(5, 10);
+
+    notifyMsg += await this.getEnergyList();
+
+    await waitHuman(5, 10);
+
+    notifyMsg += await this.getWinCouponList();
+
+    return notifyMsg;
+  }
+
+  // 执行众测能量值任务
+  async doTestingTasks() {
     const activityId = await this.getTestingActivityId();
 
     if (!activityId) {
-      return '';
+      return this.wafBlocked ? '🟡众测任务未执行：接口被 WAF/风控拦截\n' : '';
     }
 
-    await wait(5, 10);
+    await waitHuman(5, 10);
 
     const activityInfo = await this.getTestingActivityInfo(activityId);
 
@@ -35,87 +50,71 @@ class SmzdmTestingTaskBot extends SmzdmTaskBot {
       return '';
     }
 
-    await wait(5, 10);
+    await waitHuman(5, 10);
 
-    let notifyMsg = await this.doTasks(activityInfo.activity_task.default_list);
-
-    await wait(3, 5);
-
-    // 查询当前拥有的能量数量, 以及过期时间
-    notifyMsg += await this.getMyTestingInfo();
-
-    return notifyMsg || '无可执行任务';
+    return await this.doTasks(activityInfo.activity_task.default_list);
   }
 
-  // 获取当前能量值任务的活动 ID
-  async getTestingActivityId() {
-    $.log('获取活动 ID');
+  // 众测接口被 WAF 拦时返回 403、429 或 HTML 验证码页，不是 JSON
+  isWafBlocked(response) {
+    return /WAF|验证码|<!DOCTYPE html>|<script|Response code 40[13]|Response code 429|ECONNRESET|ETIMEDOUT/i.test(String(response));
+  }
 
-    const { isSuccess, data, response } = await requestApi('https://zhiyou.m.smzdm.com/task/task/ajax_get_activity_id', {
+  // 请求众测接口，被 WAF 拦时置标记并返回 false
+  async requestTestingApi(url, data) {
+    const { response } = await requestApi(url, {
       method: 'get',
-      data: {
-        'from': 'zhongce'
-      },
+      data,
       headers: {
         ...this.getHeadersForWeb(),
         Origin: 'https://test.m.smzdm.com',
         Referer: 'https://test.m.smzdm.com/'
-      }
+      },
+      parseJSON: false
     });
 
-    if (isSuccess) {
-      return data.data.activity_id;
-    }
-    else {
-      $.log(`获取活动 ID 失败！${response}`);
+    if (this.isWafBlocked(response)) {
+      this.wafBlocked = true;
+
+      $.log('🔴众测任务接口被 WAF 拦截，本次跳过众测任务');
 
       return false;
     }
+
+    try {
+      const json = JSON.parse(response);
+
+      if (json.error_code == '0') {
+        return json.data;
+      }
+
+      $.log(`众测接口返回错误：${json.error_msg}`);
+    }
+    catch (e) {
+      $.log(`众测接口返回异常：${String(response).slice(0, 150)}`);
+    }
+
+    return false;
+  }
+
+  // 获取众测能量值任务的活动 ID
+  async getTestingActivityId() {
+    $.log('获取众测活动 ID');
+
+    const data = await this.requestTestingApi('https://zhiyou.m.smzdm.com/task/task/ajax_get_activity_id', {
+      'from': 'zhongce'
+    });
+
+    return data ? data.activity_id : false;
   }
 
   // 获取活动下的所有任务
   async getTestingActivityInfo(id) {
-    $.log('获取活动信息');
+    $.log('获取众测活动信息');
 
-    const { isSuccess, data, response } = await requestApi('https://zhiyou.m.smzdm.com/task/task/ajax_get_activity_info', {
-      method: 'get',
-      data: {
-        'activity_id': id
-      },
-      headers: this.getHeadersForWeb()
+    return await this.requestTestingApi('https://zhiyou.m.smzdm.com/task/task/ajax_get_activity_info', {
+      'activity_id': id
     });
-
-    if (isSuccess) {
-      return data.data;
-    }
-    else {
-      $.log(`获取活动信息失败！${response}`);
-
-      return false;
-    }
-  }
-
-  // 众测中心-必中券信息查询
-  async getMyTestingInfo() {
-    $.log('获取必中券信息');
-
-    const { isSuccess, data, response } = await requestApi('https://test.m.smzdm.com/win_coupon/user_data', {
-      method: 'get',
-      headers: this.getHeadersForWeb()
-    });
-
-    if (isSuccess) {
-      const msg = `当前拥有必中券: ${data.data.my_energy.my_energy_total}\n必中券过期时间: ${data.data.my_energy.energy_expired_time}`;
-
-      $.log(msg);
-
-      return `\n${msg}\n`;
-    }
-    else {
-      $.log(`获取个人必中券信息失败！${response}`);
-
-      return '';
-    }
   }
 
   // 领取奖励
@@ -125,10 +124,11 @@ class SmzdmTestingTaskBot extends SmzdmTaskBot {
       data: {
         'task_id': taskId
       },
-      headers: this.getHeadersForWeb()
+      headers: this.getHeadersForWeb(),
+      parseJSON: false
     });
 
-    if (isSuccess) {
+    if (!this.isWafBlocked(response) && isSuccess) {
       $.log('领取成功！');
 
       return {
@@ -136,14 +136,77 @@ class SmzdmTestingTaskBot extends SmzdmTaskBot {
         msg: ''
       };
     }
-    else {
-      $.log(`领取任务奖励失败！${response}`);
 
-      return {
-        isSuccess,
-        msg: '领取任务奖励失败！'
-      };
+    $.log(`领取任务奖励失败！${String(response).slice(0, 150)}`);
+
+    return {
+      isSuccess: false,
+      msg: '领取任务奖励失败！'
+    };
+  }
+
+  // 能量值数量、过期时间与明细
+  async getEnergyList() {
+    $.log('查询能量值');
+
+    const { isSuccess, data, response } = await requestApi('https://test-api.smzdm.com/win_coupon/energy_list', {
+      method: 'get',
+      headers: this.getHeaders(),
+      data: {
+        'page': 1
+      }
+    });
+
+    if (!isSuccess) {
+      $.log(`查询能量值失败！${response}`);
+
+      return '';
     }
+
+    const myEnergy = data.data.my_energy || {};
+    const list = data.data.list || [];
+
+    let msg = `🏅能量值: ${myEnergy.my_energy_total}\n🏅能量值过期时间: ${myEnergy.energy_expired_time}\n`;
+
+    if (list.length > 0) {
+      msg += `🏅能量值明细:\n${list.map(item => `  ${item.article_title}`).join('\n')}\n`;
+    }
+
+    $.log(msg);
+
+    return `${msg}\n`;
+  }
+
+  // 必中券列表
+  async getWinCouponList() {
+    $.log('查询必中券列表');
+
+    const { isSuccess, data, response } = await requestApi('https://test-api.smzdm.com/win_coupon/win_coupon_list', {
+      method: 'get',
+      headers: this.getHeaders(),
+      data: {
+        'page': 1,
+        'type': '0'
+      }
+    });
+
+    if (!isSuccess) {
+      $.log(`查询必中券列表失败！${response}`);
+
+      return '';
+    }
+
+    const list = data.data.list || [];
+
+    if (list.length < 1) {
+      return '🏅暂无必中券\n';
+    }
+
+    const msg = `🏅必中券 ${list.length} 项:\n${list.map(item => `  ${item.article_title}`).join('\n')}\n`;
+
+    $.log(msg);
+
+    return msg;
   }
 }
 

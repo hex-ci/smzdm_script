@@ -6,7 +6,14 @@ cron: 20 8 * * *
 */
 
 const Env = require('./env');
-const { SmzdmBot, requestApi, parseJSON, getEnvCookies, wait } = require('./bot');
+const {
+  SmzdmBot,
+  requestApi,
+  parseJSON,
+  getEnvCookies,
+  wait,
+  waitHuman
+} = require('./bot');
 const notify = require('./sendNotify');
 
 // ------------------------------------
@@ -34,7 +41,7 @@ class SmzdmLotteryBot extends SmzdmBot {
     const vipId1 = await this.getActivityIdFromVip('https://m.smzdm.com/topic/bwrzf5/516lft');
 
     if (vipId1) {
-      await wait(3, 10);
+      await waitHuman(3, 10);
 
       notifyMsg += `转盘抽奖ID: ${vipId1}\n`;
       notifyMsg += await this.draw(vipId1);
@@ -42,13 +49,13 @@ class SmzdmLotteryBot extends SmzdmBot {
     }
 
     $.log();
-    await wait(5, 15);
+    await waitHuman(5, 15);
     $.log();
 
     const vipId2 = await this.getActivityIdFromVip('https://m.smzdm.com/topic/zhyzhuanpan/cjzp/');
 
     if (vipId2) {
-      await wait(3, 10);
+      await waitHuman(3, 10);
 
       notifyMsg += `转盘抽奖ID: ${vipId2}\n`;
       notifyMsg += await this.draw(vipId2);
