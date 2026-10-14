@@ -8,6 +8,16 @@ const {
 
 // ------------------------------------
 
+// 静默跳过的任务类型
+const SILENT_TASK_TYPES = [
+  // 爆料任务
+  'publish.baoliao_new',
+  // 值友专享任务
+  'shopping.zhiyouzhuanxiang',
+  // 下载张大妈任务
+  'interactive.download_zhangdama'
+];
+
 class SmzdmTaskBot extends SmzdmBot {
   constructor(cookie, env) {
     super(cookie);
@@ -36,6 +46,11 @@ class SmzdmTaskBot extends SmzdmBot {
       }
       // 未完成任务
       else if (task.task_status == '2') {
+        // 不做也不提示的任务类型
+        if (SILENT_TASK_TYPES.indexOf(task.task_event_type) > -1) {
+          continue;
+        }
+
         // 浏览文章任务
         if (task.task_event_type == 'interactive.view.article') {
           const { isSuccess } = await this.doViewTask(task);
@@ -122,7 +137,7 @@ class SmzdmTaskBot extends SmzdmBot {
             await waitHuman(5, 15);
           }
           else {
-            this.$env.log('🟡请设置 SMZDM_COMMENT 环境变量后才能做评论任务！');
+            this.$env.log(`🟡跳过[${task.task_name}]任务：请设置 SMZDM_COMMENT 环境变量后才能做评论任务！`);
           }
         }
         // 站外浏览任务
@@ -156,14 +171,6 @@ class SmzdmTaskBot extends SmzdmBot {
           notifyMsg += this.getTaskNotifyMessage(isSuccess, task);
 
           await waitHuman(5, 15);
-        }
-        // 爆料任务，静默跳过
-        else if (task.task_event_type == 'publish.baoliao_new') {
-          continue;
-        }
-        // 下载张大妈任务
-        else if (task.task_event_type == 'interactive.download_zhangdama') {
-          this.$env.log(`跳过[${task.task_name}]任务：APP 只跳转下载页，没有完成接口`);
         }
         // 未知类型
         else {
