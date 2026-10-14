@@ -86,6 +86,14 @@ class SmzdmTaskBot extends SmzdmBot {
 
           await waitHuman(5, 15);
         }
+        // 关注兴趣任务
+        else if (task.task_event_type == 'interactive.follow.interest_online') {
+          const { isSuccess } = await this.doFollowInterestTask(task);
+
+          notifyMsg += this.getTaskNotifyMessage(isSuccess, task);
+
+          await waitHuman(5, 15);
+        }
         // 收藏任务
         else if (task.task_event_type == 'interactive.favorite') {
           const { isSuccess } = await this.doFavoriteTask(task);
@@ -584,6 +592,93 @@ class SmzdmTaskBot extends SmzdmBot {
     await waitHuman(5, 15);
 
     return await this.receiveReward(task.task_id);
+  }
+
+  // 执行关注兴趣任务（兴趣广场的兴趣项，关注参数与栏目一致）
+  async doFollowInterestTask(task) {
+    this.$env.log(`开始任务: ${task.task_name}`);
+
+    const interests = this.getShuffled(await this.getInterestList());
+    const need = Number(task.task_even_num - task.task_finished_num);
+
+    if (interests.length < 1) {
+      return {
+        isSuccess: false
+      };
+    }
+
+    await wait(3, 10);
+
+    for (let i = 0; i < Math.min(need, interests.length); i++) {
+      const interest = interests[i];
+
+      if (interest.is_follow == '1') {
+        await this.follow({
+          method: 'destroy',
+          type: interest.type,
+          keywordId: interest.keyword_id,
+          keyword: interest.keyword
+        });
+
+        await wait(3, 10);
+      }
+
+      await this.follow({
+        method: 'create',
+        type: interest.type,
+        keywordId: interest.keyword_id,
+        keyword: interest.keyword
+      });
+
+      await wait(3, 10);
+
+      if (interest.is_follow == '0') {
+        await this.follow({
+          method: 'destroy',
+          type: interest.type,
+          keywordId: interest.keyword_id,
+          keyword: interest.keyword
+        });
+
+        await wait(3, 10);
+      }
+    }
+
+    this.$env.log('领取奖励');
+    await waitHuman(5, 15);
+
+    return await this.receiveReward(task.task_id);
+  }
+
+  // 兴趣广场里的兴趣列表
+  async getInterestList() {
+    const { isSuccess, data, response } = await requestApi('https://interest-api.smzdm.com/interest_square/index_v6', {
+      method: 'post',
+      headers: this.getHeaders(),
+      data: {
+        'f': 'android'
+      }
+    });
+
+    if (!isSuccess) {
+      this.$env.log(`获取兴趣列表失败！${response}`);
+
+      return [];
+    }
+
+    const interests = [];
+
+    (data.data.rows || []).forEach(row => {
+      (row.sub_rows || []).forEach(item => {
+        const interest = item.follow_data;
+
+        if (interest && interest.keyword_id && interest.keyword) {
+          interests.push(interest);
+        }
+      });
+    });
+
+    return interests;
   }
 
   // 执行关注品牌任务（先取关，再关注，最后取关）
