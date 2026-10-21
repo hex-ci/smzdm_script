@@ -47,7 +47,7 @@ ql repo https://github.com/hex-ci/smzdm_script.git "smzdm_" "" "env.js|bot.js|se
 
 建议使用 Android 手机抓包（iOS 也可以）域名为 `user-api.smzdm.com` 的任意链接，把**所有** Cookie 取出来放到青龙面板的 `SMZDM_COOKIE` 环境变量中，多用户请添加多个同名环境变量或者用 `&` 符号分隔。
 
-如果手机实在抓不到，也可以用浏览器的 Cookie，但是强烈建议使用手机端的 Cookie。
+如果手机实在抓不到，也可以用浏览器的 Cookie，但是强烈建议使用手机端的 Cookie。脚本会自动检查 `device_id`、`device_rid`、`z_dr` 等设备字段，缺失时在日志里提示，缺字段的 Cookie 更容易被风控。
 
 #### 抓包教程
 
@@ -64,7 +64,7 @@ ql repo https://github.com/hex-ci/smzdm_script.git "smzdm_" "" "env.js|bot.js|se
 环境变量请使用环境变量列表直接添加，不要使用 `export xxx=""` 这种方式添加环境变量。
 
 * `SMZDM_COOKIE`: 抓包抓到的 Cookie 内容，需要所有 Cookie 内容，多用户可以用 `&` 分隔，或者使用多个同名环境变量。
-* `SMZDM_SK`: 这个值是可选值，会自动计算，如果你一定想用自己的，可以抓取，是从安卓 App 的 `https://user-api.smzdm.com/checkin` 请求参数中抓包抓到的，多用户可以用 `&` 分隔，或者使用多个同名环境变量，顺序要保持与 `SMZDM_COOKIE` 多用户顺序一致。
+* `SMZDM_SK`: 签到请求里的设备签名，从安卓 App 的 `https://user-api.smzdm.com/checkin` 请求参数中抓包得到，多用户可以用 `&` 分隔，或者使用多个同名环境变量，顺序要保持与 `SMZDM_COOKIE` 多用户顺序一致。不填时脚本会按账号派生一个固定的设备串来生成 sk（跨运行不变，但与真机的设备串不同）；填了之后会解密校验它是否属于对应的 Cookie，不属于会在日志里提示（通常是多账号顺序错位）。无论哪种情况，脚本都会把 Cookie 的 `device_rid`/`device_s` 对齐成 md5(实际使用的设备串)——同机抓的 Cookie 这两个值本来就相等，不会变；不一致时说明 Cookie 和 sk 可能不是同一台设备，日志会提示。
 * `SMZDM_USER_AGENT_APP`: 这个值是可选值，是指 APP 的 User-Agent，从 APP 的 API 请求头中抓包得到，建议抓取 Android 的 User-Agent，不填使用脚本默认值。
 * `SMZDM_USER_AGENT_WEB`: 这个值是可选值，是指 APP 中访问网页的 User-Agent，一般在 APP 内的转盘网页中抓包得到，建议抓取 Android 的 User-Agent，不填使用脚本默认值。
 * `SMZDM_COMMENT`: 如果要完成评论文章的任务请设置这个环境变量，环境变量的内容是评论的文案，文案要大于 10 个汉字，建议用比较个性化的文案，脚本发布评论后会删除这条评论，但是为防止删除失败的情况，请尽量用好一点的文案，防止被判定为恶意灌水。可以写多条文案（用换行或 `|` 分隔，每条都要大于 10 个汉字），脚本每次随机选一条，避免每天发同样的内容。

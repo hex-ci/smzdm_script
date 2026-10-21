@@ -191,6 +191,11 @@ class SmzdmTaskBot extends SmzdmBot {
     return article.article_hash_id || article.article_id;
   }
 
+  // 打开文章时 APP 会把任务 redirect 里的 hashcode 一起带上
+  getRedirectHashcode(task) {
+    return (task.task_redirect_url && task.task_redirect_url.hashcode) || '';
+  }
+
   // 随机取一条评论文案，多条时用换行或 | 分隔
   getCommentContent() {
     const words = String(process.env.SMZDM_COMMENT || '')
@@ -438,7 +443,7 @@ class SmzdmTaskBot extends SmzdmBot {
       articleId = task.task_redirect_url.link_val;
 
       // 获取文章信息
-      const articleDetail = await this.getArticleDetail(articleId);
+      const articleDetail = await this.getArticleDetail(articleId, this.getRedirectHashcode(task));
 
       if (articleDetail === false) {
         return {
@@ -803,7 +808,7 @@ class SmzdmTaskBot extends SmzdmBot {
           await this.getHaojiaDetail(article.article_id);
         }
         else {
-          await this.getArticleDetail(article.article_id);
+          await this.getArticleDetail(article.article_id, this.getRedirectHashcode(task));
         }
 
         await wait(8, 20);
@@ -868,7 +873,7 @@ class SmzdmTaskBot extends SmzdmBot {
           await this.getHaojiaDetail(article.article_id);
         }
         else {
-          await this.getArticleDetail(article.article_id);
+          await this.getArticleDetail(article.article_id, this.getRedirectHashcode(task));
         }
       }
 
@@ -1337,15 +1342,12 @@ class SmzdmTaskBot extends SmzdmBot {
   }
 
   // 获取文章详情
-  async getArticleDetail(id) {
+  async getArticleDetail(id, hashcode = '') {
     const { isSuccess, data, response } = await requestApi(`https://article-api.smzdm.com/article_detail/${id}`, {
       headers: this.getHeaders(),
       data: {
-        comment_flow: '',
-        lastest_update_time: '',
-        uhome: 0,
-        imgmode: 0,
-        article_channel_id: 0
+        hashcode,
+        h5hash: ''
       }
     });
 

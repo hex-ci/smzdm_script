@@ -3,8 +3,8 @@ const got = require('got');
 
 // ------------------------------------
 
-const APP_VERSION = '11.1.95';
-const APP_VERSION_REV = '1195';
+const APP_VERSION = '11.1.98';
+const APP_VERSION_REV = '1198';
 
 const DEFAULT_USER_AGENT_APP = `smzdm_android_V${APP_VERSION} rv:${APP_VERSION_REV} (Redmi Note 3;Android10.0;zh)smzdmapp`;
 const DEFAULT_USER_AGENT_WEB = `Mozilla/5.0 (Linux; Android 10.0; Redmi Build/Redmi Note 3; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/95.0.4638.74 Mobile Safari/537.36 smzdm_android_V${APP_VERSION} rv:${APP_VERSION_REV} (Redmi;Android10.0;zh) jsbv_1.0.0 webv_2.0 smzdmapp`;
@@ -192,6 +192,41 @@ const removeCookie = (cookie, name) => {
   return cookie.replace(re, '$1');
 };
 
+const hasCookie = (cookie, name) => new RegExp(`(^|;)\\s*${name}=`, 'i').test(cookie);
+
+// 值为空也是 APP 的合法字段，已存在就不要覆盖
+const addCookieIfAbsent = (cookie, name, value = '') => {
+  if (hasCookie(cookie, name)) {
+    return cookie;
+  }
+
+  return `${cookie.replace(/;?\s*$/, ';')} ${name}=${value};`;
+};
+
+// APP 会用本地设备信息重建整条 Cookie，缺字段的请求一眼可辨
+const REQUIRED_COOKIE_FIELDS = [
+  'sess',
+  'smzdm_id',
+  'device_id',
+  'device_rid',
+  'z_dr'
+];
+
+const warnedCookieFields = new Set();
+
+const checkCookie = (cookie) => {
+  const missing = REQUIRED_COOKIE_FIELDS.filter(name => !hasCookie(cookie, name));
+  const key = missing.join(',');
+
+  if (missing.length < 1 || warnedCookieFields.has(key)) {
+    return;
+  }
+
+  warnedCookieFields.add(key);
+
+  console.log(`Cookie 缺少 APP 会发送的字段: ${missing.join('、')}，建议重新从 APP 抓取完整 Cookie`);
+};
+
 const getEnvCookies = () => {
   let cookies = [];
 
@@ -253,15 +288,17 @@ class SmzdmBot {
     this.androidCookie = setCookie(this.androidCookie, 'device_smzdm', 'android');
     this.androidCookie = setCookie(this.androidCookie, 'f', 'android');
     this.androidCookie = setCookie(this.androidCookie, 'basic_v', '0');
+    this.androidCookie = addCookieIfAbsent(this.androidCookie, 'device_type');
 
     [
       'smzdm_version',
       'device_smzdm_version',
-      'device_type',
       'device_name'
     ].forEach(name => {
       this.androidCookie = removeCookie(this.androidCookie, name);
     });
+
+    checkCookie(this.androidCookie);
   }
 
   getHeaders() {
@@ -274,8 +311,6 @@ class SmzdmBot {
     }
 
     return {
-      Accept: '*/*',
-      'Accept-Language': 'zh-Hans-CN;q=1',
       'Accept-Encoding': 'gzip',
       'request_key': requestKey(),
       'User-Agent': userAgent,

@@ -12,6 +12,7 @@ const {
   getEnvCookies,
   wait,
   waitHuman,
+  CREATE_CENTER_VIEW,
   IS_INSTALL_ZHANGDAMA
 } = require('./bot');
 const notify = require('./sendNotify');
@@ -135,10 +136,13 @@ class SmzdmNormalTaskBot extends SmzdmTaskBot {
 
     if (robotToken === false) {
       return {
-        isSuccess,
+        isSuccess: false,
         msg: '领取任务奖励失败！'
       };
     }
+
+    // 客户端初始化验证码组件时就会查一次，用来说明被要求的是哪种验证码
+    const captchaType = await this.getCaptchaType();
 
     const { isSuccess, data, response } = await requestApi('https://user-api.smzdm.com/task/activity_task_receive', {
       method: 'post',
@@ -163,14 +167,45 @@ class SmzdmNormalTaskBot extends SmzdmTaskBot {
         msg
       };
     }
-    else {
-      $.log(`领取任务奖励失败！${response}`);
+
+    // 110202 = 服务端要求人机验证，空验证码一定过不了
+    if (data.error_code == '110202') {
+      const type = captchaType === 'geetest' ? '滑块' : '图形';
+
+      $.log(`🟡[${taskId}] 领取需要${type}验证码，脚本无法通过，请到 APP 内手动领取`);
 
       return {
-        isSuccess,
-        msg: '领取任务奖励失败！'
+        isSuccess: false,
+        msg: '需要验证码'
       };
     }
+
+    $.log(`领取任务奖励失败！${response}`);
+
+    return {
+      isSuccess,
+      msg: '领取任务奖励失败！'
+    };
+  }
+
+  // 验证码类型：geetest 走滑块，其余走图形
+  async getCaptchaType() {
+    const { isSuccess, data, response } = await requestApi('https://user-api.smzdm.com/getcaptcha/switch', {
+      method: 'post',
+      headers: this.getHeaders(),
+      data: {
+        token: this.token,
+        create_center_view: CREATE_CENTER_VIEW
+      }
+    });
+
+    if (isSuccess && data.data) {
+      return data.data.type || '';
+    }
+
+    $.log(`获取验证码配置失败！${response}`);
+
+    return '';
   }
 }
 
