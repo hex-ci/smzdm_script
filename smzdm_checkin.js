@@ -326,20 +326,16 @@ function upsertCookie(cookie, name, value) {
   return `${cookie.replace(/;?\s*$/, ';')} ${name}=${value};`;
 }
 
-// APP 的 device_rid/device_s 就是 md5(设备串)，把 cookie 对齐到 sk 实际用的设备段
+// APP 的 device_rid 是 md5(设备串)，把 cookie 对齐到 sk 实际用的设备段
+// device_s 不动：它等于 new_device_id，默认模式 APP 根本不发这个字段
 function alignDeviceCookie(cookie, deviceId) {
   const hash = md5(deviceId);
-  let result = cookie;
 
-  if (getCookieValue(result, 'device_rid') !== hash) {
-    result = upsertCookie(result, 'device_rid', hash);
+  if (getCookieValue(cookie, 'device_rid') === hash) {
+    return cookie;
   }
 
-  if (getCookieValue(result, 'device_s') !== hash) {
-    result = upsertCookie(result, 'device_s', hash);
-  }
-
-  return result;
+  return upsertCookie(cookie, 'device_rid', hash);
 }
 
 !(async () => {
@@ -421,7 +417,7 @@ function alignDeviceCookie(cookie, deviceId) {
       if (aligned !== cookie) {
         warnOnce(
           'align',
-          'cookie 的 device_rid/device_s 与 sk 的设备段不一致，已按 sk 对齐（cookie 和 sk 可能不是同一台设备）'
+          'cookie 的 device_rid 与 sk 的设备段不一致，已按 sk 对齐（cookie 和 sk 可能不是同一台设备）'
         );
       }
 

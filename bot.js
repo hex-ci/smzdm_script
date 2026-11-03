@@ -204,27 +204,36 @@ const addCookieIfAbsent = (cookie, name, value = '') => {
 };
 
 // APP 会用本地设备信息重建整条 Cookie，缺字段的请求一眼可辨
-const REQUIRED_COOKIE_FIELDS = [
-  'sess',
-  'smzdm_id',
-  'device_id',
-  'device_rid',
-  'z_dr'
+const REQUIRED_COOKIE_FIELDS = ['sess', 'device_rid'];
+
+// 设备标识分两组：APP 默认发 pr_ 变体，只有 encipher_did=0 的老模式才发原字段
+const DEVICE_COOKIE_GROUPS = [
+  ['device_id', 'pr_device_id'],
+  ['z_dr', 'pr_z_dr']
 ];
 
 const warnedCookieFields = new Set();
 
 const checkCookie = (cookie) => {
   const missing = REQUIRED_COOKIE_FIELDS.filter(name => !hasCookie(cookie, name));
-  const key = missing.join(',');
+  const missingDevice = DEVICE_COOKIE_GROUPS
+    .filter(group => !group.some(name => hasCookie(cookie, name)))
+    .map(group => group.join(' 或 '));
+  const key = [...missing, ...missingDevice].join(',');
 
-  if (missing.length < 1 || warnedCookieFields.has(key)) {
+  if (!key || warnedCookieFields.has(key)) {
     return;
   }
 
   warnedCookieFields.add(key);
 
-  console.log(`Cookie 缺少 APP 会发送的字段: ${missing.join('、')}，建议重新从 APP 抓取完整 Cookie`);
+  if (missing.length > 0) {
+    console.log(`Cookie 缺少 APP 会发送的字段: ${missing.join('、')}，建议重新从 APP 抓取完整 Cookie`);
+  }
+
+  if (missingDevice.length > 0) {
+    console.log(`Cookie 里没有设备标识（${missingDevice.join('、')}），不像 APP 原生抓包，更容易被风控`);
+  }
 };
 
 const getEnvCookies = () => {
