@@ -213,6 +213,8 @@ class SmzdmTaskBot extends SmzdmBot {
     const articles = await this.getArticleList(20);
 
     if (articles.length < 1) {
+      this.$env.log(`🟡跳过[${task.task_name}]任务：获取文章列表为空！`);
+
       return {
         isSuccess: false
       };
@@ -268,6 +270,8 @@ class SmzdmTaskBot extends SmzdmBot {
       const articles = await this.getArticleList(20);
 
       if (articles.length < 1) {
+        this.$env.log(`🟡跳过[${task.task_name}]任务：获取文章列表为空！`);
+
         return {
           isSuccess: false
         };
@@ -280,6 +284,8 @@ class SmzdmTaskBot extends SmzdmBot {
       const articles = await this.getArticleListFromLanmu(task.task_redirect_url.link_val, 20);
 
       if (articles.length < 1) {
+        this.$env.log(`🟡跳过[${task.task_name}]任务：获取文章列表为空！`);
+
         return {
           isSuccess: false
         };
@@ -399,6 +405,8 @@ class SmzdmTaskBot extends SmzdmBot {
       const articles = await this.getArticleListFromLanmu(task.task_redirect_url.link_val, 20);
 
       if (articles.length < 1) {
+        this.$env.log(`🟡跳过[${task.task_name}]任务：获取文章列表为空！`);
+
         return {
           isSuccess: false
         };
@@ -414,6 +422,8 @@ class SmzdmTaskBot extends SmzdmBot {
       const articles = await this.getArticleListFromTag(task.task_redirect_url.link_val, 20);
 
       if (articles.length < 1) {
+        this.$env.log(`🟡跳过[${task.task_name}]任务：获取文章列表为空！`);
+
         return {
           isSuccess: false
         };
@@ -429,6 +439,8 @@ class SmzdmTaskBot extends SmzdmBot {
       const articles = await this.getArticleList(20);
 
       if (articles.length < 1) {
+        this.$env.log(`🟡跳过[${task.task_name}]任务：获取文章列表为空！`);
+
         return {
           isSuccess: false
         };
@@ -493,6 +505,8 @@ class SmzdmTaskBot extends SmzdmBot {
     const user = await this.getUserByRandom();
 
     if (!user) {
+      this.$env.log(`🟡跳过[${task.task_name}]任务：获取用户列表为空！`);
+
       return {
         isSuccess: false
       };
@@ -614,6 +628,8 @@ class SmzdmTaskBot extends SmzdmBot {
     const need = Number(task.task_even_num - task.task_finished_num);
 
     if (interests.length < 1) {
+      this.$env.log(`🟡跳过[${task.task_name}]任务：获取兴趣列表为空！`);
+
       return {
         isSuccess: false
       };
@@ -701,6 +717,8 @@ class SmzdmTaskBot extends SmzdmBot {
     const brandDetail = await this.getBrandDetail(task.task_redirect_url.link_val);
 
     if (!brandDetail.id) {
+      this.$env.log(`🟡跳过[${task.task_name}]任务：未获取到品牌信息！`);
+
       return {
         isSuccess: false
       };
